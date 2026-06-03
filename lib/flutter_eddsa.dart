@@ -260,11 +260,9 @@ class EddsaUtils {
   static String stringFromBytes(Uint8List bytes) =>
       String.fromCharCodes(bytes);
 
-  /// Generates a random 32-byte value.
-  ///
-  /// **Note:** uses a non-cryptographic RNG — for testing only.
+  /// Generates a cryptographically secure random 32-byte value.
   static Uint8List generateRandom32() {
-    final rng = Random();
+    final rng = Random.secure();
     return Uint8List.fromList(
         List.generate(_Ffi.keyLength, (_) => rng.nextInt(256)));
   }
