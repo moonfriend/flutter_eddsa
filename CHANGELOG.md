@@ -1,3 +1,8 @@
+## 0.0.2
+
+* Improved README: added Diffie-Hellman concept explanation with ASCII diagram and KDF note.
+* Replaced example app with a focused Diffie-Hellman demo for pub.dev Example tab.
+
 ## 0.0.1
 
 * Initial release.
