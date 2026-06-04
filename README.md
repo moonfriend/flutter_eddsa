@@ -71,22 +71,46 @@ print(isValid); // true
 
 ### X25519 Diffie-Hellman key exchange
 
+Diffie-Hellman lets two parties establish a **shared secret over a public channel**
+without ever transmitting a private key. The idea: each party combines their own
+secret with the other party's public key, and the mathematics of the elliptic curve
+guarantees both arrive at the same result.
+
+```
+Alice                              Bob
+─────                              ───
+aliceSecret (private)              bobSecret (private)
+alicePublic = secret × G           bobPublic  = secret × G
+         ──── exchange public keys ────▶
+sharedSecret = aliceSecret × bobPublic
+                                   sharedSecret = bobSecret × alicePublic
+         (same value on both sides — proven by the associativity of scalar multiplication)
+```
+
+In code:
+
 ```dart
-// Alice
+// Each party generates a key pair
 final aliceSecret = EddsaUtils.generateRandom32();
 final alicePublic  = Ed25519.generateX25519PublicKey(aliceSecret);
 
-// Bob
 final bobSecret = EddsaUtils.generateRandom32();
 final bobPublic  = Ed25519.generateX25519PublicKey(bobSecret);
 
-// Both sides arrive at the same shared secret
+// They exchange public keys (safe to send over untrusted network)
+// Each computes the shared secret independently
 final aliceShared = Ed25519.diffieHellman(aliceSecret, bobPublic);
 final bobShared   = Ed25519.diffieHellman(bobSecret,   alicePublic);
 
+// Both arrive at the same 32-byte value
 assert(EddsaUtils.hexFromBytes(aliceShared) ==
        EddsaUtils.hexFromBytes(bobShared));
+
+// Use the shared secret to derive an encryption key (e.g. with HKDF or SHA-256)
 ```
+
+The shared secret is typically passed through a key-derivation function (KDF) before
+use as a symmetric encryption key.
 
 ### Convert an Ed25519 key pair to X25519
 
