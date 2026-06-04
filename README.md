@@ -1,92 +1,173 @@
 # flutter_eddsa
 
-A new Flutter FFI plugin project.
+**Elliptic-curve cryptography for Flutter** — Ed25519 digital signatures and X25519 Diffie-Hellman key exchange, delivered through a direct native FFI bridge with no platform-channel overhead.
 
-## Getting Started
+The same algorithms that secure **Signal, WireGuard, OpenSSH, and TLS 1.3** — now available as a clean, cross-platform Flutter plugin.
 
-This project is a starting point for a Flutter
-[FFI plugin](https://flutter.dev/to/ffi-package),
-a specialized package that includes native code directly invoked with Dart FFI.
+---
 
-## Project structure
+## Why Curve25519?
 
-This template uses the following structure:
+Curve25519 is the modern standard for high-speed, high-security elliptic-curve cryptography:
 
-* `src`: Contains the native source code, and a CmakeFile.txt file for building
-  that source code into a dynamic library.
+- **Ed25519** — deterministic digital signatures. Fast to sign, fast to verify, no random number generator required at signing time, and immune to the class of fault attacks that affect ECDSA.
+- **X25519** — Diffie-Hellman key agreement. Two parties can establish a shared secret over an untrusted channel without ever transmitting a private key.
 
-* `lib`: Contains the Dart code that defines the API of the plugin, and which
-  calls into the native code using `dart:ffi`.
+Both primitives are built on the same underlying curve, which means an Ed25519 key pair can be converted to X25519 format — useful when a single long-term key pair needs to serve both signing and key-exchange roles.
 
-* platform folders (`android`, `ios`, `windows`, etc.): Contains the build files
-  for building and bundling the native code library with the platform application.
+---
 
-## Building and bundling native code
+## Features
 
-The `pubspec.yaml` specifies FFI plugins as follows:
+- **Ed25519** public key derivation, signing, and verification
+- **X25519** Diffie-Hellman key agreement
+- **Key conversion** — Ed25519 ↔ X25519 for both public and secret keys
+- Pure native performance via `dart:ffi` — no method channels, no serialisation overhead
+- Cryptographically secure random key generation
+- Android · iOS · Linux · macOS · Windows
 
-```yaml
-  plugin:
-    platforms:
-      some_platform:
-        ffiPlugin: true
-```
+---
 
-This configuration invokes the native build for the various target platforms
-and bundles the binaries in Flutter applications using these FFI plugins.
-
-This can be combined with dartPluginClass, such as when FFI is used for the
-implementation of one platform in a federated plugin:
+## Installation
 
 ```yaml
-  plugin:
-    implements: some_other_plugin
-    platforms:
-      some_platform:
-        dartPluginClass: SomeClass
-        ffiPlugin: true
+dependencies:
+  flutter_eddsa: ^0.0.1
 ```
 
-A plugin can have both FFI and method channels:
-
-```yaml
-  plugin:
-    platforms:
-      some_platform:
-        pluginClass: SomeName
-        ffiPlugin: true
+```sh
+flutter pub get
 ```
 
-The native build systems that are invoked by FFI (and method channel) plugins are:
+---
 
-* For Android: Gradle, which invokes the Android NDK for native builds.
-  * See the documentation in android/build.gradle.
-* For iOS and MacOS: Xcode, via CocoaPods.
-  * See the documentation in ios/flutter_eddsa.podspec.
-  * See the documentation in macos/flutter_eddsa.podspec.
-* For Linux and Windows: CMake.
-  * See the documentation in linux/CMakeLists.txt.
-  * See the documentation in windows/CMakeLists.txt.
+## Usage
 
-## Binding to native code
+### Generate a key pair
 
-To use the native code, bindings in Dart are needed.
-To avoid writing these by hand, they are generated from the header file
-(`src/flutter_eddsa.h`) by `package:ffigen`.
-Regenerate the bindings by running `dart run ffigen --config ffigen.yaml`.
+```dart
+import 'package:flutter_eddsa/flutter_eddsa.dart';
 
-## Invoking native code
+// Generate a random 32-byte secret key
+final secret = EddsaUtils.generateRandom32();
 
-Very short-running native functions can be directly invoked from any isolate.
-For example, see `sum` in `lib/flutter_eddsa.dart`.
+// Derive the corresponding Ed25519 public key
+final publicKey = Ed25519.derivePublicKey(secret);
+```
 
-Longer-running functions should be invoked on a helper isolate to avoid
-dropping frames in Flutter applications.
-For example, see `sumAsync` in `lib/flutter_eddsa.dart`.
+### Sign a message
 
-## Flutter help
+```dart
+final message   = EddsaUtils.bytesFromString('Hello, flutter_eddsa!');
+final signature = Ed25519.signMessage(secret, publicKey, message);
+```
 
-For help getting started with Flutter, view our
-[online documentation](https://docs.flutter.dev), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Verify a signature
 
+```dart
+final isValid = Ed25519.verifySignature(signature, publicKey, message);
+print(isValid); // true
+```
+
+### X25519 Diffie-Hellman key exchange
+
+```dart
+// Alice
+final aliceSecret = EddsaUtils.generateRandom32();
+final alicePublic  = Ed25519.generateX25519PublicKey(aliceSecret);
+
+// Bob
+final bobSecret = EddsaUtils.generateRandom32();
+final bobPublic  = Ed25519.generateX25519PublicKey(bobSecret);
+
+// Both sides arrive at the same shared secret
+final aliceShared = Ed25519.diffieHellman(aliceSecret, bobPublic);
+final bobShared   = Ed25519.diffieHellman(bobSecret,   alicePublic);
+
+assert(EddsaUtils.hexFromBytes(aliceShared) ==
+       EddsaUtils.hexFromBytes(bobShared));
+```
+
+### Convert an Ed25519 key pair to X25519
+
+```dart
+final xSecret = Ed25519.secretKeyToX25519(secret);
+final xPublic  = Ed25519.publicKeyToX25519(publicKey);
+```
+
+---
+
+## API reference
+
+### `Ed25519`
+
+All methods are static. Keys are 32 bytes; signatures are 64 bytes.
+
+| Method | Input | Output | Description |
+|--------|-------|--------|-------------|
+| `derivePublicKey(secret)` | 32 B secret | 32 B public key | Derives an Ed25519 public key |
+| `signMessage(secret, publicKey, message)` | keys + arbitrary message | 64 B signature | Signs a message |
+| `verifySignature(signature, publicKey, message)` | 64 B sig + key + message | `bool` | Verifies a signature |
+| `generateX25519PublicKey(scalar)` | 32 B scalar | 32 B public key | Scalar × base point (X25519 key generation) |
+| `scalarMultiply(scalar, point)` | 32 B scalar + 32 B point | 32 B result | Raw X25519 scalar multiplication |
+| `diffieHellman(secret, peerPublicKey)` | own secret + peer public | 32 B shared secret | X25519 key agreement |
+| `publicKeyToX25519(edPublicKey)` | 32 B Ed25519 public key | 32 B X25519 public key | Key format conversion |
+| `secretKeyToX25519(edSecretKey)` | 32 B Ed25519 secret key | 32 B X25519 secret key | Key format conversion |
+
+### `EddsaUtils`
+
+| Method | Description |
+|--------|-------------|
+| `generateRandom32()` | Cryptographically secure 32-byte random value |
+| `bytesFromHex(hex)` | Decode a lowercase hex string to `Uint8List` |
+| `hexFromBytes(bytes)` | Encode `Uint8List` as a lowercase hex string |
+| `bytesFromString(text)` | Encode a UTF-8 string as bytes |
+| `stringFromBytes(bytes)` | Decode bytes to a UTF-8 string |
+
+---
+
+## Platform support
+
+| Platform | Status |
+|----------|--------|
+| Android  | ✅ |
+| iOS      | ✅ |
+| macOS    | ✅ |
+| Linux    | ✅ |
+| Windows  | ✅ |
+| Web      | ❌ (not yet supported) |
+
+---
+
+## Native cryptographic core
+
+The cryptographic implementation is provided by
+[libeddsa](https://github.com/phlay/libeddsa) — a compact, public-domain C library
+by **Philipp Lay** with the following properties:
+
+- Written in portable C99
+- Constant-time scalar multiplication (timing-attack resistant)
+- Stack-cleaning after secret key operations
+- No external dependencies
+- Under 90 KB compiled
+
+The C source is vendored directly into `src/crypto/` and compiled as part of the
+Flutter build for each platform — no pre-built binaries, no external downloads.
+
+---
+
+## Security notes
+
+- Keys and signatures are passed as raw `Uint8List` — never log or persist secret keys.
+- `generateRandom32()` uses Dart's `Random.secure()`, which draws from the OS entropy pool.
+- This plugin provides **primitives only**. For a complete secure channel you will also need
+  a symmetric cipher and message authentication (e.g. AES-GCM or ChaCha20-Poly1305).
+
+---
+
+## License
+
+This plugin is licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE).
+
+The bundled C cryptographic library (`src/crypto/`) is in the **public domain**
+(original work by Philipp Lay).
