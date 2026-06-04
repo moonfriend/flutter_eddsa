@@ -1,7 +1,8 @@
 name: flutter_eddsa
-description: "A new Flutter FFI plugin project."
+description: "Flutter FFI plugin for Ed25519 digital signatures and X25519 Diffie-Hellman key exchange. High-performance Curve25519 cryptography via native C."
 version: 0.0.1
-homepage:
+homepage: https://github.com/moonfriend/flutter_eddsa
+repository: https://github.com/moonfriend/flutter_eddsa
 
 environment:
   sdk: ^3.7.0
