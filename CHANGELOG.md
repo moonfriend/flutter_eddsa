@@ -1,3 +1,7 @@
+## 0.0.3
+
+* Fixed license.
+
 ## 0.0.2
 
 * Improved README: added Diffie-Hellman concept explanation with ASCII diagram and KDF note.
