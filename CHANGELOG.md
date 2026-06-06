@@ -1,3 +1,7 @@
+## 0.0.4
+
+* Relicensed from GPL-3.0 to MIT.
+
 ## 0.0.3
 
 * Fixed license.

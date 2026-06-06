@@ -191,7 +191,7 @@ Flutter build for each platform — no pre-built binaries, no external downloads
 
 ## License
 
-This plugin is licensed under the **GNU General Public License v3.0** — see [LICENSE](LICENSE).
+This plugin is licensed under the **MIT License** — see [LICENSE](LICENSE).
 
 The bundled C cryptographic library (`src/crypto/`) is in the **public domain**
 (original work by Philipp Lay).
