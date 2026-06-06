@@ -1,3 +1,14 @@
+## 0.0.9
+
+* Rewrote example app: step-by-step interactive demo covering key generation,
+  Ed25519 signing, signature verification (including tamper detection), and
+  X25519 Diffie-Hellman key exchange. All key and signature values are
+  selectable and copyable.
+* Added educational "color metaphor" page showing how DH key exchange works
+  visually, accessible via the info button in the demo app.
+* Added pub.dev version and pub points badges to README.
+* Fixed installation snippet version constraint in README.
+
 ## 0.0.5
 
 * Removed `EddsaUtils.bytesFromString` and `EddsaUtils.stringFromBytes` — not needed for cryptographic operations. Use `dart:convert`'s `utf8.encode`/`utf8.decode` for text encoding.

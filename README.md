@@ -1,5 +1,9 @@
 # flutter_eddsa
 
+[![pub package](https://img.shields.io/pub/v/flutter_eddsa.svg)](https://pub.dev/packages/flutter_eddsa)
+[![pub points](https://img.shields.io/pub/points/flutter_eddsa)](https://pub.dev/packages/flutter_eddsa/score)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 **Elliptic-curve cryptography for Flutter** — Ed25519 digital signatures and X25519 Diffie-Hellman key exchange, delivered through a direct native FFI bridge with no platform-channel overhead.
 
 The same algorithms that secure **Signal, WireGuard, OpenSSH, and TLS 1.3** — now available as a clean, cross-platform Flutter plugin.
@@ -32,7 +36,7 @@ Both primitives are built on the same underlying curve, which means an Ed25519 k
 
 ```yaml
 dependencies:
-  flutter_eddsa: ^0.0.1
+  flutter_eddsa: ^0.0.5
 ```
 
 ```sh
