@@ -1,8 +1,8 @@
-/// Example: X25519 Diffie-Hellman key exchange with flutter_eddsa.
-///
-/// Two parties (Alice and Bob) each generate a key pair independently.
-/// They exchange public keys over an untrusted channel and each computes
-/// the same shared secret — without ever transmitting a private key.
+// Example: X25519 Diffie-Hellman key exchange with flutter_eddsa.
+//
+// Two parties (Alice and Bob) each generate a key pair independently.
+// They exchange public keys over an untrusted channel and each computes
+// the same shared secret — without ever transmitting a private key.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_eddsa/flutter_eddsa.dart';

@@ -1,3 +1,7 @@
+## 0.0.5
+
+* Removed `EddsaUtils.bytesFromString` and `EddsaUtils.stringFromBytes` — not needed for cryptographic operations. Use `dart:convert`'s `utf8.encode`/`utf8.decode` for text encoding.
+
 ## 0.0.4
 
 * Relicensed from GPL-3.0 to MIT.

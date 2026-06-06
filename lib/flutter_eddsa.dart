@@ -249,17 +249,6 @@ class EddsaUtils {
     return buf.toString();
   }
 
-  /// Encodes [text] as UTF-8 bytes.
-  static Uint8List bytesFromString(String text) {
-    final out = Uint8List(text.length);
-    for (int i = 0; i < text.length; i++) out[i] = text.codeUnitAt(i);
-    return out;
-  }
-
-  /// Decodes UTF-8 [bytes] to a string.
-  static String stringFromBytes(Uint8List bytes) =>
-      String.fromCharCodes(bytes);
-
   /// Generates a cryptographically secure random 32-byte value.
   static Uint8List generateRandom32() {
     final rng = Random.secure();

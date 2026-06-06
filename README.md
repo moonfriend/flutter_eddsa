@@ -58,7 +58,9 @@ final publicKey = Ed25519.derivePublicKey(secret);
 ### Sign a message
 
 ```dart
-final message   = EddsaUtils.bytesFromString('Hello, flutter_eddsa!');
+import 'dart:convert';
+
+final message   = utf8.encode('Hello, flutter_eddsa!');
 final signature = Ed25519.signMessage(secret, publicKey, message);
 ```
 
@@ -145,8 +147,6 @@ All methods are static. Keys are 32 bytes; signatures are 64 bytes.
 | `generateRandom32()` | Cryptographically secure 32-byte random value |
 | `bytesFromHex(hex)` | Decode a lowercase hex string to `Uint8List` |
 | `hexFromBytes(bytes)` | Encode `Uint8List` as a lowercase hex string |
-| `bytesFromString(text)` | Encode a UTF-8 string as bytes |
-| `stringFromBytes(bytes)` | Decode bytes to a UTF-8 string |
 
 ---
 
