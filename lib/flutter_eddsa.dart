@@ -338,7 +338,9 @@ class Ed25519 {
 class EddsaUtils {
   /// Decodes a lowercase hex string to bytes.
   static Uint8List bytesFromHex(String hex) {
-    assert(hex.length.isEven);
+    if (hex.length.isOdd) {
+      throw ArgumentError.value(hex, 'hex', 'must have an even number of characters');
+    }
     return Uint8List.fromList([
       for (int i = 0; i < hex.length; i += 2)
         int.parse(hex[i] + hex[i + 1], radix: 16),
