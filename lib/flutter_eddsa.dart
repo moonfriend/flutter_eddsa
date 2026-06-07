@@ -172,6 +172,11 @@ class SecretKey implements Finalizable {
     malloc.free(_ptr);
   }
 
+  Pointer<Uint8> get _nativePtr {
+    _checkDisposed();
+    return _ptr;
+  }
+
   void _checkDisposed() {
     if (_disposed) throw StateError('SecretKey has been disposed');
   }
@@ -181,45 +186,54 @@ class SecretKey implements Finalizable {
 
 /// Ed25519 digital signatures and X25519 Diffie-Hellman key exchange.
 ///
-/// All methods are static. Keys are 32 bytes; signatures are 64 bytes.
+/// All methods are static. Secret inputs are [SecretKey]; public keys and
+/// signatures remain [Uint8List]. Keys are 32 bytes; signatures are 64 bytes.
 class Ed25519 {
-  /// Derives the Ed25519 public key for [secret] (32 bytes).
-  static Uint8List derivePublicKey(Uint8List secret) {
-    assert(secret.length == _Ffi.keyLength);
+  /// Derives the Ed25519 public key for [secret].
+  static Uint8List derivePublicKey(SecretKey secret) {
     return using((Arena arena) {
-      final secPtr = arena<Uint8>(_Ffi.keyLength);
       final pubPtr = arena<Uint8>(_Ffi.keyLength);
-      _write(secPtr, secret);
-      _Ffi.derivePublicKey(pubPtr, secPtr);
+      _Ffi.derivePublicKey(pubPtr, secret._nativePtr);
       return _read(pubPtr, _Ffi.keyLength);
     });
   }
 
   /// Signs [message] with [secret] and [publicKey].
   /// Returns a 64-byte signature.
+  ///
+  /// Throws [ArgumentError] if [publicKey].length != 32.
   static Uint8List signMessage(
-      Uint8List secret, Uint8List publicKey, Uint8List message) {
-    assert(secret.length    == _Ffi.keyLength);
-    assert(publicKey.length == _Ffi.keyLength);
+      SecretKey secret, Uint8List publicKey, Uint8List message) {
+    if (publicKey.length != _Ffi.keyLength) {
+      throw ArgumentError.value(
+          publicKey, 'publicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+    }
     return using((Arena arena) {
-      final secPtr = arena<Uint8>(_Ffi.keyLength);
       final pubPtr = arena<Uint8>(_Ffi.keyLength);
       final msgPtr = arena<Uint8>(message.length + 1);
       final sigPtr = arena<Uint8>(_Ffi.signatureLength);
-      _write(secPtr, secret);
       _write(pubPtr, publicKey);
       _write(msgPtr, message);
-      _Ffi.sign(sigPtr, secPtr, pubPtr, msgPtr, message.length);
+      _Ffi.sign(sigPtr, secret._nativePtr, pubPtr, msgPtr, message.length);
       return _read(sigPtr, _Ffi.signatureLength);
     });
   }
 
   /// Returns `true` if [signature] is a valid Ed25519 signature over
   /// [message] by [publicKey].
+  ///
+  /// Throws [ArgumentError] if [signature].length != 64 or
+  /// [publicKey].length != 32.
   static bool verifySignature(
       Uint8List signature, Uint8List publicKey, Uint8List message) {
-    assert(signature.length == _Ffi.signatureLength);
-    assert(publicKey.length == _Ffi.keyLength);
+    if (signature.length != _Ffi.signatureLength) {
+      throw ArgumentError.value(
+          signature, 'signature', 'must be exactly ${_Ffi.signatureLength} bytes');
+    }
+    if (publicKey.length != _Ffi.keyLength) {
+      throw ArgumentError.value(
+          publicKey, 'publicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+    }
     return using((Arena arena) {
       final sigPtr = arena<Uint8>(_Ffi.signatureLength);
       final pubPtr = arena<Uint8>(_Ffi.keyLength);
@@ -231,53 +245,64 @@ class Ed25519 {
     });
   }
 
-  /// Computes the X25519 public key for [scalar] against the standard
-  /// base point.
-  static Uint8List generateX25519PublicKey(Uint8List scalar) {
-    assert(scalar.length == _Ffi.keyLength);
+  /// Computes the X25519 public key for [scalar] against the standard base point.
+  static Uint8List generateX25519PublicKey(SecretKey scalar) {
     return using((Arena arena) {
-      final scalarPtr = arena<Uint8>(_Ffi.keyLength);
-      final outPtr    = arena<Uint8>(_Ffi.keyLength);
-      _write(scalarPtr, scalar);
-      _Ffi.generateX25519PublicKey(outPtr, scalarPtr);
+      final outPtr = arena<Uint8>(_Ffi.keyLength);
+      _Ffi.generateX25519PublicKey(outPtr, scalar._nativePtr);
       return _read(outPtr, _Ffi.keyLength);
     });
   }
 
   /// Multiplies [scalar] by an arbitrary curve [point].
-  static Uint8List scalarMultiply(Uint8List scalar, Uint8List point) {
-    assert(scalar.length == _Ffi.keyLength);
-    assert(point.length  == _Ffi.keyLength);
+  ///
+  /// Throws [ArgumentError] if [point].length != 32.
+  static Uint8List scalarMultiply(SecretKey scalar, Uint8List point) {
+    if (point.length != _Ffi.keyLength) {
+      throw ArgumentError.value(
+          point, 'point', 'must be exactly ${_Ffi.keyLength} bytes');
+    }
     return using((Arena arena) {
-      final scalarPtr = arena<Uint8>(_Ffi.keyLength);
-      final pointPtr  = arena<Uint8>(_Ffi.keyLength);
-      final outPtr    = arena<Uint8>(_Ffi.keyLength);
-      _write(scalarPtr, scalar);
+      final pointPtr = arena<Uint8>(_Ffi.keyLength);
+      final outPtr   = arena<Uint8>(_Ffi.keyLength);
       _write(pointPtr, point);
-      _Ffi.scalarMultiply(outPtr, scalarPtr, pointPtr);
+      _Ffi.scalarMultiply(outPtr, scalar._nativePtr, pointPtr);
       return _read(outPtr, _Ffi.keyLength);
     });
   }
 
   /// Performs X25519 Diffie-Hellman key agreement between [secret] and
-  /// [peerPublicKey].
-  static Uint8List diffieHellman(Uint8List secret, Uint8List peerPublicKey) {
-    assert(secret.length        == _Ffi.keyLength);
-    assert(peerPublicKey.length == _Ffi.keyLength);
-    return using((Arena arena) {
-      final secPtr  = arena<Uint8>(_Ffi.keyLength);
-      final peerPtr = arena<Uint8>(_Ffi.keyLength);
-      final outPtr  = arena<Uint8>(_Ffi.keyLength);
-      _write(secPtr, secret);
-      _write(peerPtr, peerPublicKey);
-      _Ffi.diffieHellman(outPtr, secPtr, peerPtr);
-      return _read(outPtr, _Ffi.keyLength);
-    });
+  /// [peerPublicKey]. Returns the shared secret as a [SecretKey] — call
+  /// [SecretKey.dispose] when done.
+  ///
+  /// Throws [ArgumentError] if [peerPublicKey].length != 32.
+  static SecretKey diffieHellman(SecretKey secret, Uint8List peerPublicKey) {
+    if (peerPublicKey.length != _Ffi.keyLength) {
+      throw ArgumentError.value(
+          peerPublicKey, 'peerPublicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+    }
+    final outPtr = malloc<Uint8>(_Ffi.keyLength);
+    try {
+      using((Arena arena) {
+        final peerPtr = arena<Uint8>(_Ffi.keyLength);
+        _write(peerPtr, peerPublicKey);
+        _Ffi.diffieHellman(outPtr, secret._nativePtr, peerPtr);
+      });
+      return SecretKey._internal(outPtr);
+    } catch (_) {
+      malloc.free(outPtr);
+      rethrow;
+    }
   }
 
   /// Converts an Ed25519 public key to its X25519 equivalent.
+  ///
+  /// Throws [ArgumentError] if [edPublicKey].length != 32.
   static Uint8List publicKeyToX25519(Uint8List edPublicKey) {
-    assert(edPublicKey.length == _Ffi.keyLength);
+    if (edPublicKey.length != _Ffi.keyLength) {
+      throw ArgumentError.value(
+          edPublicKey, 'edPublicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+    }
     return using((Arena arena) {
       final inpPtr = arena<Uint8>(_Ffi.keyLength);
       final outPtr = arena<Uint8>(_Ffi.keyLength);
@@ -287,16 +312,17 @@ class Ed25519 {
     });
   }
 
-  /// Converts an Ed25519 secret key to its X25519 equivalent.
-  static Uint8List secretKeyToX25519(Uint8List edSecretKey) {
-    assert(edSecretKey.length == _Ffi.keyLength);
-    return using((Arena arena) {
-      final inpPtr = arena<Uint8>(_Ffi.keyLength);
-      final outPtr = arena<Uint8>(_Ffi.keyLength);
-      _write(inpPtr, edSecretKey);
-      _Ffi.secretKeyToX25519(outPtr, inpPtr);
-      return _read(outPtr, _Ffi.keyLength);
-    });
+  /// Converts an Ed25519 secret key to its X25519 equivalent. Returns the
+  /// result as a [SecretKey] — call [SecretKey.dispose] when done.
+  static SecretKey secretKeyToX25519(SecretKey edSecretKey) {
+    final outPtr = malloc<Uint8>(_Ffi.keyLength);
+    try {
+      _Ffi.secretKeyToX25519(outPtr, edSecretKey._nativePtr);
+      return SecretKey._internal(outPtr);
+    } catch (_) {
+      malloc.free(outPtr);
+      rethrow;
+    }
   }
 
   static Uint8List _read(Pointer<Uint8> ptr, int length) =>
@@ -308,7 +334,7 @@ class Ed25519 {
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
-/// Encoding and conversion utilities.
+/// Encoding, conversion, and memory utilities.
 class EddsaUtils {
   /// Decodes a lowercase hex string to bytes.
   static Uint8List bytesFromHex(String hex) {
@@ -334,4 +360,12 @@ class EddsaUtils {
     return Uint8List.fromList(
         List.generate(_Ffi.keyLength, (_) => rng.nextInt(256)));
   }
+
+  /// Best-effort wipe of [bytes] on the Dart heap.
+  ///
+  /// **Note:** Dart AOT may eliminate this call (no `volatile` equivalent).
+  /// For deterministic zeroing keep secrets in a [SecretKey] instead.
+  /// Use this to reduce — not eliminate — the exposure window when a secret
+  /// has briefly passed through a [Uint8List] (e.g. after [SecretKey.fromBytes]).
+  static void zero(Uint8List bytes) => bytes.fillRange(0, bytes.length, 0);
 }

@@ -109,7 +109,7 @@ class DemoPage extends StatefulWidget {
 
 class _DemoPageState extends State<DemoPage> {
   // Step 1
-  Uint8List? _secretKey;
+  SecretKey? _secretKey;
   Uint8List? _publicKey;
 
   // Step 2
@@ -122,21 +122,27 @@ class _DemoPageState extends State<DemoPage> {
   String? _verifiedMessage;
 
   // Step 4
-  Uint8List? _laylaSec;
+  SecretKey? _laylaSec;
   Uint8List? _laylaPub;
-  Uint8List? _yusufSec;
+  SecretKey? _yusufSec;
   Uint8List? _yusufPub;
-  Uint8List? _laylaShared;
-  Uint8List? _yusufShared;
+  SecretKey? _laylaShared;
+  SecretKey? _yusufShared;
 
   @override
   void dispose() {
+    _secretKey?.dispose();
+    _laylaSec?.dispose();
+    _yusufSec?.dispose();
+    _laylaShared?.dispose();
+    _yusufShared?.dispose();
     _msgCtrl.dispose();
     super.dispose();
   }
 
   void _generateKeys() {
-    final sk = EddsaUtils.generateRandom32();
+    _secretKey?.dispose();
+    final sk = SecretKey.generate();
     final pk = Ed25519.derivePublicKey(sk);
     setState(() {
       _secretKey = sk;
@@ -172,17 +178,21 @@ class _DemoPageState extends State<DemoPage> {
   }
 
   void _runDH() {
-    final aSec = EddsaUtils.generateRandom32();
+    _laylaSec?.dispose();
+    _yusufSec?.dispose();
+    _laylaShared?.dispose();
+    _yusufShared?.dispose();
+    final aSec = SecretKey.generate();
     final aPub = Ed25519.generateX25519PublicKey(aSec);
-    final bSec = EddsaUtils.generateRandom32();
+    final bSec = SecretKey.generate();
     final bPub = Ed25519.generateX25519PublicKey(bSec);
     setState(() {
       _laylaSec    = aSec;
       _laylaPub    = aPub;
-      _yusufSec      = bSec;
-      _yusufPub      = bPub;
+      _yusufSec    = bSec;
+      _yusufPub    = bPub;
       _laylaShared = Ed25519.diffieHellman(aSec, bPub);
-      _yusufShared   = Ed25519.diffieHellman(bSec, aPub);
+      _yusufShared = Ed25519.diffieHellman(bSec, aPub);
     });
   }
 
@@ -240,8 +250,8 @@ class _DemoPageState extends State<DemoPage> {
           if (sk != null && pk != null) ...[
             const SizedBox(height: 16),
             _HexField(
-                label: 'Secret key (never share this)',
-                hex: EddsaUtils.hexFromBytes(sk)),
+                label: 'Secret key (never share this — shown here for demo only)',
+                hex: EddsaUtils.hexFromBytes(sk.toBytes())),
             _HexField(
                 label: 'Public key',
                 hex: EddsaUtils.hexFromBytes(pk)),
@@ -364,10 +374,10 @@ class _DemoPageState extends State<DemoPage> {
   // ── Section 4: DH key exchange ───────────────────────────────────────────
 
   Widget _buildDHCard() {
-    final aSec = _laylaSec;
-    final aPub = _laylaPub;
-    final bSec = _yusufSec;
-    final bPub = _yusufPub;
+    final aSec    = _laylaSec;
+    final aPub    = _laylaPub;
+    final bSec    = _yusufSec;
+    final bPub    = _yusufPub;
     final aShared = _laylaShared;
     final bShared = _yusufShared;
     final hasResult = aSec != null && aPub != null &&
@@ -406,12 +416,12 @@ class _DemoPageState extends State<DemoPage> {
           if (hasResult) ...[
             const SizedBox(height: 20),
             _DHProcess(
-              laylaSec: EddsaUtils.hexFromBytes(aSec),
+              laylaSec: EddsaUtils.hexFromBytes(aSec.toBytes()),
               laylaPub: EddsaUtils.hexFromBytes(aPub),
-              yusufSec:   EddsaUtils.hexFromBytes(bSec),
+              yusufSec:   EddsaUtils.hexFromBytes(bSec.toBytes()),
               yusufPub:   EddsaUtils.hexFromBytes(bPub),
-              laylaShared: EddsaUtils.hexFromBytes(aShared),
-              yusufShared:   EddsaUtils.hexFromBytes(bShared),
+              laylaShared: EddsaUtils.hexFromBytes(aShared.toBytes()),
+              yusufShared:   EddsaUtils.hexFromBytes(bShared.toBytes()),
             ),
           ],
         ],
@@ -972,23 +982,26 @@ class _ColorPageState extends State<ColorPage> {
   _ColorExchange? _ex;
 
   void _run() {
-    final aSec = EddsaUtils.generateRandom32();
-    final aPub = Ed25519.generateX25519PublicKey(aSec);
-    final bSec = EddsaUtils.generateRandom32();
-    final bPub = Ed25519.generateX25519PublicKey(bSec);
+    final aSec   = SecretKey.generate();
+    final aPub   = Ed25519.generateX25519PublicKey(aSec);
+    final bSec   = SecretKey.generate();
+    final bPub   = Ed25519.generateX25519PublicKey(bSec);
     final shared = Ed25519.diffieHellman(aSec, bPub);
     setState(() {
       _ex = _ColorExchange(
-        laylaSecret:    _keyColor(aSec),
+        laylaSecret:    _keyColor(aSec.toBytes()),
         laylaPublic:    _keyColor(aPub),
-        yusufSecret:      _keyColor(bSec),
-        yusufPublic:      _keyColor(bPub),
-        shared:         _keyColor(shared),
+        yusufSecret:    _keyColor(bSec.toBytes()),
+        yusufPublic:    _keyColor(bPub),
+        shared:         _keyColor(shared.toBytes()),
         laylaPublicHex: EddsaUtils.hexFromBytes(aPub).substring(0, 16),
-        yusufPublicHex:   EddsaUtils.hexFromBytes(bPub).substring(0, 16),
-        sharedHex:      EddsaUtils.hexFromBytes(shared).substring(0, 16),
+        yusufPublicHex: EddsaUtils.hexFromBytes(bPub).substring(0, 16),
+        sharedHex:      EddsaUtils.hexFromBytes(shared.toBytes()).substring(0, 16),
       );
     });
+    aSec.dispose();
+    bSec.dispose();
+    shared.dispose();
   }
 
   @override
