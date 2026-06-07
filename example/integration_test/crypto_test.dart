@@ -9,6 +9,48 @@ String toHex(Uint8List b) => EddsaUtils.hexFromBytes(b);
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  // ─── SecretKey ────────────────────────────────────────────────────────────
+
+  group('SecretKey', () {
+    test('generate() produces a 32-byte key', () {
+      final key = SecretKey.generate();
+      expect(key.toBytes().length, equals(32));
+      key.dispose();
+    });
+
+    test('fromBytes() round-trips a known value', () {
+      final bytes = hex('9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60');
+      final key = SecretKey.fromBytes(bytes);
+      expect(toHex(key.toBytes()), equals(toHex(bytes)));
+      key.dispose();
+    });
+
+    test('fromBytes() rejects wrong length', () {
+      expect(() => SecretKey.fromBytes(Uint8List(16)), throwsArgumentError);
+      expect(() => SecretKey.fromBytes(Uint8List(0)),  throwsArgumentError);
+      expect(() => SecretKey.fromBytes(Uint8List(33)), throwsArgumentError);
+    });
+
+    test('toBytes() after dispose() throws StateError', () {
+      final key = SecretKey.generate();
+      key.dispose();
+      expect(() => key.toBytes(), throwsStateError);
+    });
+
+    test('dispose() is idempotent', () {
+      final key = SecretKey.generate();
+      expect(() { key.dispose(); key.dispose(); }, returnsNormally);
+    });
+
+    test('generate() produces unique keys', () {
+      final a = SecretKey.generate();
+      final b = SecretKey.generate();
+      expect(toHex(a.toBytes()), isNot(equals(toHex(b.toBytes()))));
+      a.dispose();
+      b.dispose();
+    });
+  });
+
   // ─── derivePublicKey ──────────────────────────────────────────────────────
 
   group('derivePublicKey', () {
