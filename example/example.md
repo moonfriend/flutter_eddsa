@@ -6,8 +6,8 @@
 import 'dart:convert';
 import 'package:flutter_eddsa/flutter_eddsa.dart';
 
-// Generate a random secret key and derive its public key
-final secret    = EddsaUtils.generateRandom32();
+// Generate a secret key in native memory (never touches the Dart GC heap)
+final secret    = SecretKey.generate();
 final publicKey = Ed25519.derivePublicKey(secret);
 
 // Sign a message
@@ -17,6 +17,9 @@ final signature = Ed25519.signMessage(secret, publicKey, message);
 // Verify the signature
 final valid = Ed25519.verifySignature(signature, publicKey, message);
 print(valid); // true
+
+// Always dispose when done — zeros native memory before freeing
+secret.dispose();
 ```
 
 ## X25519 Diffie-Hellman key exchange
@@ -25,26 +28,54 @@ print(valid); // true
 import 'package:flutter_eddsa/flutter_eddsa.dart';
 
 // Each party generates a key pair
-final aliceSecret = EddsaUtils.generateRandom32();
+final aliceSecret = SecretKey.generate();
 final alicePublic = Ed25519.generateX25519PublicKey(aliceSecret);
 
-final bobSecret = EddsaUtils.generateRandom32();
+final bobSecret = SecretKey.generate();
 final bobPublic = Ed25519.generateX25519PublicKey(bobSecret);
 
-// Each side computes the shared secret independently
+// Each side independently computes the shared secret
+// diffieHellman() returns a SecretKey — dispose it when done
 final aliceShared = Ed25519.diffieHellman(aliceSecret, bobPublic);
 final bobShared   = Ed25519.diffieHellman(bobSecret,   alicePublic);
 
-// Both arrive at the same value
-assert(EddsaUtils.hexFromBytes(aliceShared) ==
-       EddsaUtils.hexFromBytes(bobShared));
+assert(EddsaUtils.hexFromBytes(aliceShared.toBytes()) ==
+       EddsaUtils.hexFromBytes(bobShared.toBytes()));
+
+aliceSecret.dispose();
+bobSecret.dispose();
+aliceShared.dispose();
+bobShared.dispose();
 ```
+
+## Loading a saved key from storage
+
+When a secret key must round-trip through a `Uint8List` (e.g. after reading
+from Flutter Secure Storage), minimise the exposure window:
+
+```dart
+import 'package:flutter_eddsa/flutter_eddsa.dart';
+
+// bytes comes from secure storage / hex decode — lives on Dart heap briefly
+final bytes  = EddsaUtils.bytesFromHex(savedHex);
+final secret = SecretKey.fromBytes(bytes);
+EddsaUtils.zero(bytes); // best-effort wipe of the Dart-heap copy
+
+// use secret ...
+secret.dispose();
+```
+
+> **Note:** The `String` returned by storage APIs is immutable and interned —
+> it cannot be zeroed. This brief exposure is unavoidable when loading
+> long-term keys; for ephemeral session keys prefer `SecretKey.generate()`.
 
 ## Key conversion (Ed25519 → X25519)
 
 ```dart
 import 'package:flutter_eddsa/flutter_eddsa.dart';
 
+// secretKeyToX25519 returns a SecretKey — dispose it
 final xSecret = Ed25519.secretKeyToX25519(secret);
 final xPublic = Ed25519.publicKeyToX25519(publicKey);
+xSecret.dispose();
 ```
