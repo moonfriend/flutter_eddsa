@@ -1,3 +1,24 @@
+## 0.2.0
+
+**Breaking changes** — secret inputs are now `SecretKey` instead of `Uint8List`.
+
+* New `SecretKey` class: secrets held in `malloc`'d native memory, never on the
+  Dart GC heap. `dispose()` zeros the buffer before freeing. A `NativeFinalizer`
+  frees (but does not zero) on GC if `dispose` is forgotten.
+* `Ed25519.derivePublicKey`, `signMessage`, `generateX25519PublicKey`,
+  `scalarMultiply` now accept `SecretKey` for the secret argument.
+* `Ed25519.diffieHellman` and `secretKeyToX25519` now return `SecretKey`
+  (the shared secret and converted key are sensitive — caller must `dispose`).
+* Secret bytes are passed to FFI via a direct native pointer — no arena copy
+  of secret material, eliminating the free-without-zero gap.
+* All `assert()` guards replaced with `ArgumentError` / `StateError` so
+  validation fires in release mode.
+* New `EddsaUtils.zero(Uint8List)` — best-effort heap wipe for the brief window
+  when secrets pass through a `Uint8List` (e.g. after `SecretKey.fromBytes`).
+* Added `topics:` to `pubspec.yaml` for pub.dev discoverability.
+* README: new `SecretKey` usage section, updated API table, expanded security
+  notes listing the 5 things users must still do themselves.
+
 ## 0.1.1
 
 * Fixed pub.dev Example tab: replaced `example/example.dart` with
