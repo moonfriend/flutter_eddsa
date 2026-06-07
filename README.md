@@ -36,7 +36,7 @@ Both primitives are built on the same underlying curve, which means an Ed25519 k
 
 ```yaml
 dependencies:
-  flutter_eddsa: ^0.1.1
+  flutter_eddsa: ^0.2.0
 ```
 
 ```sh
@@ -49,13 +49,14 @@ flutter pub get
 
 ### Generate a key pair
 
+Secrets are held in `SecretKey` — a native-memory wrapper that zeros its
+buffer on `dispose()` and never touches the Dart GC heap.
+
 ```dart
 import 'package:flutter_eddsa/flutter_eddsa.dart';
 
-// Generate a random 32-byte secret key
-final secret = EddsaUtils.generateRandom32();
-
-// Derive the corresponding Ed25519 public key
+// Generate a secret key directly in native memory
+final secret    = SecretKey.generate();
 final publicKey = Ed25519.derivePublicKey(secret);
 ```
 
@@ -73,6 +74,16 @@ final signature = Ed25519.signMessage(secret, publicKey, message);
 ```dart
 final isValid = Ed25519.verifySignature(signature, publicKey, message);
 print(isValid); // true
+```
+
+### Dispose when done
+
+Always call `dispose()` on every `SecretKey` when you no longer need it.
+This zeros the native buffer before freeing — the essential step for
+memory-dump resistance.
+
+```dart
+secret.dispose(); // zeros + frees native memory
 ```
 
 ### X25519 Diffie-Hellman key exchange
@@ -97,20 +108,27 @@ In code:
 
 ```dart
 // Each party generates a key pair
-final aliceSecret = EddsaUtils.generateRandom32();
-final alicePublic  = Ed25519.generateX25519PublicKey(aliceSecret);
+final aliceSecret = SecretKey.generate();
+final alicePublic = Ed25519.generateX25519PublicKey(aliceSecret);
 
-final bobSecret = EddsaUtils.generateRandom32();
-final bobPublic  = Ed25519.generateX25519PublicKey(bobSecret);
+final bobSecret = SecretKey.generate();
+final bobPublic = Ed25519.generateX25519PublicKey(bobSecret);
 
 // They exchange public keys (safe to send over untrusted network)
 // Each computes the shared secret independently
+// diffieHellman() returns a SecretKey — the shared secret is sensitive
 final aliceShared = Ed25519.diffieHellman(aliceSecret, bobPublic);
 final bobShared   = Ed25519.diffieHellman(bobSecret,   alicePublic);
 
 // Both arrive at the same 32-byte value
-assert(EddsaUtils.hexFromBytes(aliceShared) ==
-       EddsaUtils.hexFromBytes(bobShared));
+assert(EddsaUtils.hexFromBytes(aliceShared.toBytes()) ==
+       EddsaUtils.hexFromBytes(bobShared.toBytes()));
+
+// Dispose all secrets when done
+aliceSecret.dispose();
+bobSecret.dispose();
+aliceShared.dispose();
+bobShared.dispose();
 
 // Use the shared secret to derive an encryption key (e.g. with HKDF or SHA-256)
 ```
@@ -118,39 +136,71 @@ assert(EddsaUtils.hexFromBytes(aliceShared) ==
 The shared secret is typically passed through a key-derivation function (KDF) before
 use as a symmetric encryption key.
 
+### Loading a key from storage
+
+When a secret must briefly pass through a `Uint8List` (e.g. reading from
+Flutter Secure Storage), minimise the exposure window:
+
+```dart
+final bytes  = EddsaUtils.bytesFromHex(savedHex);
+final secret = SecretKey.fromBytes(bytes);
+EddsaUtils.zero(bytes); // best-effort wipe of the Dart-heap copy
+// use secret ...
+secret.dispose();
+```
+
+> **Note:** The `String` from storage APIs is immutable and cannot be zeroed.
+> For ephemeral session keys, always prefer `SecretKey.generate()`.
+
 ### Convert an Ed25519 key pair to X25519
 
 ```dart
+// secretKeyToX25519 returns a SecretKey — dispose it when done
 final xSecret = Ed25519.secretKeyToX25519(secret);
-final xPublic  = Ed25519.publicKeyToX25519(publicKey);
+final xPublic = Ed25519.publicKeyToX25519(publicKey);
+xSecret.dispose();
 ```
 
 ---
 
 ## API reference
 
+### `SecretKey`
+
+Holds a 32-byte secret in native (non-GC) memory.
+
+| Member | Description |
+|--------|-------------|
+| `SecretKey.generate()` | Random key written directly into native memory |
+| `SecretKey.fromBytes(Uint8List)` | Copy bytes in; throws `ArgumentError` if length ≠ 32 |
+| `toBytes()` → `Uint8List` | Copy bytes out to Dart heap; throws `StateError` after dispose |
+| `dispose()` | Zero + free native memory; idempotent |
+
 ### `Ed25519`
 
-All methods are static. Keys are 32 bytes; signatures are 64 bytes.
+All methods are static. Secret inputs are `SecretKey`; public keys and
+signatures remain `Uint8List`. Keys are 32 bytes; signatures are 64 bytes.
+All methods throw `ArgumentError` if a `Uint8List` argument has the wrong length.
 
-| Method | Input | Output | Description |
-|--------|-------|--------|-------------|
-| `derivePublicKey(secret)` | 32 B secret | 32 B public key | Derives an Ed25519 public key |
-| `signMessage(secret, publicKey, message)` | keys + arbitrary message | 64 B signature | Signs a message |
-| `verifySignature(signature, publicKey, message)` | 64 B sig + key + message | `bool` | Verifies a signature |
-| `generateX25519PublicKey(scalar)` | 32 B scalar | 32 B public key | Scalar × base point (X25519 key generation) |
-| `scalarMultiply(scalar, point)` | 32 B scalar + 32 B point | 32 B result | Raw X25519 scalar multiplication |
-| `diffieHellman(secret, peerPublicKey)` | own secret + peer public | 32 B shared secret | X25519 key agreement |
-| `publicKeyToX25519(edPublicKey)` | 32 B Ed25519 public key | 32 B X25519 public key | Key format conversion |
-| `secretKeyToX25519(edSecretKey)` | 32 B Ed25519 secret key | 32 B X25519 secret key | Key format conversion |
+| Method | Secret input | Output | Description |
+|--------|-------------|--------|-------------|
+| `derivePublicKey(secret)` | `SecretKey` | `Uint8List` (32 B) | Derives an Ed25519 public key |
+| `signMessage(secret, publicKey, message)` | `SecretKey` | `Uint8List` (64 B) | Signs a message |
+| `verifySignature(signature, publicKey, message)` | — | `bool` | Verifies a signature |
+| `generateX25519PublicKey(scalar)` | `SecretKey` | `Uint8List` (32 B) | Scalar × base point |
+| `scalarMultiply(scalar, point)` | `SecretKey` | `Uint8List` (32 B) | Raw X25519 scalar multiplication |
+| `diffieHellman(secret, peerPublicKey)` | `SecretKey` | **`SecretKey`** | X25519 key agreement — dispose result |
+| `publicKeyToX25519(edPublicKey)` | — | `Uint8List` (32 B) | Ed25519 → X25519 public key |
+| `secretKeyToX25519(edSecretKey)` | `SecretKey` | **`SecretKey`** | Ed25519 → X25519 secret key — dispose result |
 
 ### `EddsaUtils`
 
 | Method | Description |
 |--------|-------------|
-| `generateRandom32()` | Cryptographically secure 32-byte random value |
+| `generateRandom32()` | Cryptographically secure 32-byte `Uint8List` (use `SecretKey.generate()` for secrets) |
 | `bytesFromHex(hex)` | Decode a lowercase hex string to `Uint8List` |
 | `hexFromBytes(bytes)` | Encode `Uint8List` as a lowercase hex string |
+| `zero(bytes)` | Best-effort heap wipe — see security notes |
 
 ---
 
@@ -186,10 +236,47 @@ Flutter build for each platform — no pre-built binaries, no external downloads
 
 ## Security notes
 
-- Keys and signatures are passed as raw `Uint8List` — never log or persist secret keys.
-- `generateRandom32()` uses Dart's `Random.secure()`, which draws from the OS entropy pool.
-- This plugin provides **primitives only**. For a complete secure channel you will also need
-  a symmetric cipher and message authentication (e.g. AES-GCM or ChaCha20-Poly1305).
+### Memory safety — what `SecretKey` protects against
+
+Dart's GC is a **copying collector**: when promoting objects between heap
+generations it copies bytes to a new address, leaving the original bytes
+unzeroed. Dart also has no `volatile` equivalent, so a `fillRange(0)` on a
+`Uint8List` can be eliminated by the AOT compiler as a dead store.
+
+`SecretKey` sidesteps both issues by keeping secret bytes in `malloc`'d
+native memory that the GC never touches. `dispose()` zeros the buffer
+before freeing it, matching what the underlying C library (`libeddsa`) does
+with `burn()` / `burnstack()` for on-stack secrets.
+
+### What you still need to do
+
+Even with `SecretKey`, there are gaps you must manage yourself:
+
+1. **Call `dispose()` explicitly.** The `NativeFinalizer` will free the
+   memory on GC if you forget, but it will **not** zero it first.
+
+2. **After `SecretKey.fromBytes(bytes)`, call `EddsaUtils.zero(bytes)`.**
+   This is a best-effort wipe of the `Uint8List` that briefly held the
+   secret on the Dart heap. AOT may eliminate it, but it is still worth
+   doing to reduce the exposure window.
+
+3. **You cannot zero a `String`.** Storage APIs (Flutter Secure Storage,
+   SharedPreferences) return Dart `String` values, which are immutable and
+   interned. The hex or base64 string will remain in memory until the GC
+   collects it. This is a fundamental platform limitation — mitigate it by
+   using hardware-backed storage (Keychain on iOS, Keystore on Android) so
+   the raw key material is never returned to Dart at all where possible.
+
+4. **`toBytes()` places the secret on the Dart heap.** Only call it when
+   you have no alternative, and zero the result immediately with
+   `EddsaUtils.zero(result)` after use.
+
+5. **This plugin provides primitives only.** For a complete secure channel
+   you also need a symmetric cipher and message authentication
+   (e.g. AES-GCM or ChaCha20-Poly1305).
+
+- `SecretKey.generate()` uses Dart's `Random.secure()`, which draws from the OS entropy pool.
+- Never log or persist a `SecretKey`'s bytes; if you must serialise a key, use hardware-backed secure storage.
 
 ---
 
