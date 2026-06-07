@@ -98,6 +98,85 @@ class _Ffi {
       .asFunction<_ConvertSec>();
 }
 
+// ─── SecretKey ────────────────────────────────────────────────────────────────
+
+/// An Ed25519 or X25519 secret key held in native (non-GC) memory.
+///
+/// Secret bytes live outside the Dart heap, preventing GC copies from leaving
+/// unzeroed shadows in from-space. Call [dispose] when finished — it
+/// overwrites the native buffer with zeros before freeing it.
+///
+/// A [NativeFinalizer] is attached as a safety net: if [dispose] is never
+/// called the allocator will free the memory on the next GC cycle, but it
+/// will **not** zero it first. Always call [dispose] explicitly.
+///
+/// **Avoid [toBytes] in production.** The returned [Uint8List] lives on the
+/// Dart heap and is subject to GC copying. If you must extract bytes, zero
+/// the result immediately with [EddsaUtils.zero].
+class SecretKey implements Finalizable {
+  static final _finalizer = NativeFinalizer(malloc.nativeFree);
+
+  final Pointer<Uint8> _ptr;
+  bool _disposed = false;
+
+  SecretKey._internal(this._ptr) {
+    _finalizer.attach(this, _ptr.cast(),
+        externalSize: _Ffi.keyLength, detach: this);
+  }
+
+  /// Generates a cryptographically secure random [SecretKey].
+  ///
+  /// Random bytes are written directly into native memory and never touch the
+  /// Dart heap.
+  factory SecretKey.generate() {
+    final ptr = malloc<Uint8>(_Ffi.keyLength);
+    final rng = Random.secure();
+    for (int i = 0; i < _Ffi.keyLength; i++) {
+      ptr[i] = rng.nextInt(256);
+    }
+    return SecretKey._internal(ptr);
+  }
+
+  /// Creates a [SecretKey] by copying [bytes] into native memory.
+  ///
+  /// [bytes] must be exactly 32 bytes. After calling this, wipe [bytes] with
+  /// [EddsaUtils.zero] to reduce the window the secret spends on the Dart heap.
+  ///
+  /// Throws [ArgumentError] if [bytes].length != 32.
+  factory SecretKey.fromBytes(Uint8List bytes) {
+    if (bytes.length != _Ffi.keyLength) {
+      throw ArgumentError.value(
+          bytes, 'bytes', 'must be exactly ${_Ffi.keyLength} bytes');
+    }
+    final ptr = malloc<Uint8>(_Ffi.keyLength);
+    ptr.asTypedList(_Ffi.keyLength).setAll(0, bytes);
+    return SecretKey._internal(ptr);
+  }
+
+  /// Copies the secret bytes out to a [Uint8List].
+  ///
+  /// Throws [StateError] if [dispose] has already been called.
+  Uint8List toBytes() {
+    _checkDisposed();
+    return Uint8List.fromList(_ptr.asTypedList(_Ffi.keyLength));
+  }
+
+  /// Zeros the native buffer and releases the memory.
+  ///
+  /// Safe to call more than once — subsequent calls are no-ops.
+  void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    _finalizer.detach(this);
+    _ptr.asTypedList(_Ffi.keyLength).fillRange(0, _Ffi.keyLength, 0);
+    malloc.free(_ptr);
+  }
+
+  void _checkDisposed() {
+    if (_disposed) throw StateError('SecretKey has been disposed');
+  }
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
 /// Ed25519 digital signatures and X25519 Diffie-Hellman key exchange.
