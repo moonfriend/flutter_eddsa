@@ -4,6 +4,13 @@ version: 0.1.1
 homepage: https://github.com/moonfriend/flutter_eddsa
 repository: https://github.com/moonfriend/flutter_eddsa
 
+topics:
+  - cryptography
+  - ed25519
+  - x25519
+  - diffie-hellman
+  - ffi
+
 environment:
   sdk: ^3.7.0
   flutter: '>=3.3.0'
