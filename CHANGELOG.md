@@ -1,3 +1,10 @@
+## 0.1.1
+
+* Fixed pub.dev Example tab: replaced `example/example.dart` with
+  `example/example.md` so the simple snippet takes priority over the
+  full demo app (`example/lib/main.dart`).
+* Updated installation version constraint in README to `^0.1.0`.
+
 ## 0.1.0
 
 * Added `example/example.dart`: a minimal, copy-pastable snippet shown in the
