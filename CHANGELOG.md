@@ -1,3 +1,9 @@
+## 0.1.0
+
+* Added `example/example.dart`: a minimal, copy-pastable snippet shown in the
+  pub.dev Example tab, covering keypair generation, Ed25519 sign/verify, and
+  X25519 Diffie-Hellman key exchange.
+
 ## 0.0.9
 
 * Rewrote example app: step-by-step interactive demo covering key generation,
