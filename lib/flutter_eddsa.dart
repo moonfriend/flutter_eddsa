@@ -348,6 +348,7 @@ class Ed25519 {
       });
       return SecretKey._internal(outPtr);
     } catch (_) {
+      outPtr.asTypedList(_Ffi.keyLength).fillRange(0, _Ffi.keyLength, 0);
       malloc.free(outPtr);
       rethrow;
     }
@@ -381,6 +382,7 @@ class Ed25519 {
       _Ffi.secretKeyToX25519(outPtr, edSecretKey._nativePtr);
       return SecretKey._internal(outPtr);
     } catch (_) {
+      outPtr.asTypedList(_Ffi.keyLength).fillRange(0, _Ffi.keyLength, 0);
       malloc.free(outPtr);
       rethrow;
     }
