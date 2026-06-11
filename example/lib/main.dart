@@ -188,21 +188,23 @@ class _DemoPageState extends State<DemoPage> {
   }
 
   void _runDH() {
-    _laylaSec?.dispose();
-    _yusufSec?.dispose();
-    _laylaShared?.dispose();
-    _yusufShared?.dispose();
     final aSec = SecretKey.generate();
     final aPub = Ed25519.generateX25519PublicKey(aSec);
     final bSec = SecretKey.generate();
     final bPub = Ed25519.generateX25519PublicKey(bSec);
+    final aShared = Ed25519.diffieHellman(aSec, bPub);
+    final bShared = Ed25519.diffieHellman(bSec, aPub);
+    _laylaSec?.dispose();
+    _yusufSec?.dispose();
+    _laylaShared?.dispose();
+    _yusufShared?.dispose();
     setState(() {
       _laylaSec = aSec;
       _laylaPub = aPub;
       _yusufSec = bSec;
       _yusufPub = bPub;
-      _laylaShared = Ed25519.diffieHellman(aSec, bPub);
-      _yusufShared = Ed25519.diffieHellman(bSec, aPub);
+      _laylaShared = aShared;
+      _yusufShared = bShared;
     });
   }
 
