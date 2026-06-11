@@ -20,82 +20,112 @@ DynamicLibrary _loadLibrary() {
 // ─── FFI type pairs ───────────────────────────────────────────────────────────
 
 typedef _CGenPub = Void Function(Pointer<Uint8> pub, Pointer<Uint8> sec);
-typedef _GenPub   = void Function(Pointer<Uint8> pub, Pointer<Uint8> sec);
+typedef _GenPub = void Function(Pointer<Uint8> pub, Pointer<Uint8> sec);
 
-typedef _CSign = Void Function(
-    Pointer<Uint8> sig, Pointer<Uint8> sec,
-    Pointer<Uint8> pub, Pointer<Uint8> data, Size len);
-typedef _Sign = void Function(
-    Pointer<Uint8> sig, Pointer<Uint8> sec,
-    Pointer<Uint8> pub, Pointer<Uint8> data, int len);
+typedef _CSign =
+    Void Function(
+      Pointer<Uint8> sig,
+      Pointer<Uint8> sec,
+      Pointer<Uint8> pub,
+      Pointer<Uint8> data,
+      Size len,
+    );
+typedef _Sign =
+    void Function(
+      Pointer<Uint8> sig,
+      Pointer<Uint8> sec,
+      Pointer<Uint8> pub,
+      Pointer<Uint8> data,
+      int len,
+    );
 
-typedef _CVerify = Bool Function(
-    Pointer<Uint8> sig, Pointer<Uint8> pub, Pointer<Uint8> data, Size len);
-typedef _Verify = bool Function(
-    Pointer<Uint8> sig, Pointer<Uint8> pub, Pointer<Uint8> data, int len);
+typedef _CVerify =
+    Bool Function(
+      Pointer<Uint8> sig,
+      Pointer<Uint8> pub,
+      Pointer<Uint8> data,
+      Size len,
+    );
+typedef _Verify =
+    bool Function(
+      Pointer<Uint8> sig,
+      Pointer<Uint8> pub,
+      Pointer<Uint8> data,
+      int len,
+    );
 
-typedef _CBasePoint = Void Function(
-    Pointer<Uint8> out, Pointer<Uint8> scalar);
-typedef _BasePoint = void Function(
-    Pointer<Uint8> out, Pointer<Uint8> scalar);
+typedef _CBasePoint = Void Function(Pointer<Uint8> out, Pointer<Uint8> scalar);
+typedef _BasePoint = void Function(Pointer<Uint8> out, Pointer<Uint8> scalar);
 
-typedef _CScalarMul = Void Function(
-    Pointer<Uint8> out, Pointer<Uint8> scalar, Pointer<Uint8> point);
-typedef _ScalarMul = void Function(
-    Pointer<Uint8> out, Pointer<Uint8> scalar, Pointer<Uint8> point);
+typedef _CScalarMul =
+    Void Function(
+      Pointer<Uint8> out,
+      Pointer<Uint8> scalar,
+      Pointer<Uint8> point,
+    );
+typedef _ScalarMul =
+    void Function(
+      Pointer<Uint8> out,
+      Pointer<Uint8> scalar,
+      Pointer<Uint8> point,
+    );
 
-typedef _CDiffieHellman = Void Function(
-    Pointer<Uint8> out, Pointer<Uint8> sec, Pointer<Uint8> point);
-typedef _DiffieHellman = void Function(
-    Pointer<Uint8> out, Pointer<Uint8> sec, Pointer<Uint8> point);
+typedef _CDiffieHellman =
+    Void Function(Pointer<Uint8> out, Pointer<Uint8> sec, Pointer<Uint8> point);
+typedef _DiffieHellman =
+    void Function(Pointer<Uint8> out, Pointer<Uint8> sec, Pointer<Uint8> point);
 
-typedef _CConvertPub = Void Function(
-    Pointer<Uint8> out, Pointer<Uint8> inp);
-typedef _ConvertPub = void Function(
-    Pointer<Uint8> out, Pointer<Uint8> inp);
+typedef _CConvertPub = Void Function(Pointer<Uint8> out, Pointer<Uint8> inp);
+typedef _ConvertPub = void Function(Pointer<Uint8> out, Pointer<Uint8> inp);
 
-typedef _CConvertSec = Void Function(
-    Pointer<Uint8> out, Pointer<Uint8> inp);
-typedef _ConvertSec = void Function(
-    Pointer<Uint8> out, Pointer<Uint8> inp);
+typedef _CConvertSec = Void Function(Pointer<Uint8> out, Pointer<Uint8> inp);
+typedef _ConvertSec = void Function(Pointer<Uint8> out, Pointer<Uint8> inp);
 
 // ─── Native bindings ──────────────────────────────────────────────────────────
 
 class _Ffi {
-  static const int keyLength       = 32;
+  static const int keyLength = 32;
   static const int signatureLength = 64;
 
-  static final _GenPub derivePublicKey = _nativeLib
-      .lookup<NativeFunction<_CGenPub>>('ed25519_genpub')
-      .asFunction<_GenPub>();
+  static final _GenPub derivePublicKey =
+      _nativeLib
+          .lookup<NativeFunction<_CGenPub>>('ed25519_genpub')
+          .asFunction<_GenPub>();
 
-  static final _Sign sign = _nativeLib
-      .lookup<NativeFunction<_CSign>>('ed25519_sign')
-      .asFunction<_Sign>();
+  static final _Sign sign =
+      _nativeLib
+          .lookup<NativeFunction<_CSign>>('ed25519_sign')
+          .asFunction<_Sign>();
 
-  static final _Verify verifySignature = _nativeLib
-      .lookup<NativeFunction<_CVerify>>('ed25519_verify')
-      .asFunction<_Verify>();
+  static final _Verify verifySignature =
+      _nativeLib
+          .lookup<NativeFunction<_CVerify>>('ed25519_verify')
+          .asFunction<_Verify>();
 
-  static final _BasePoint generateX25519PublicKey = _nativeLib
-      .lookup<NativeFunction<_CBasePoint>>('x25519_base')
-      .asFunction<_BasePoint>();
+  static final _BasePoint generateX25519PublicKey =
+      _nativeLib
+          .lookup<NativeFunction<_CBasePoint>>('x25519_base')
+          .asFunction<_BasePoint>();
 
-  static final _ScalarMul scalarMultiply = _nativeLib
-      .lookup<NativeFunction<_CScalarMul>>('x25519')
-      .asFunction<_ScalarMul>();
+  static final _ScalarMul scalarMultiply =
+      _nativeLib
+          .lookup<NativeFunction<_CScalarMul>>('x25519')
+          .asFunction<_ScalarMul>();
 
-  static final _DiffieHellman diffieHellman = _nativeLib
-      .lookup<NativeFunction<_CDiffieHellman>>('DH')
-      .asFunction<_DiffieHellman>();
+  static final _DiffieHellman diffieHellman =
+      _nativeLib
+          .lookup<NativeFunction<_CDiffieHellman>>('DH')
+          .asFunction<_DiffieHellman>();
 
-  static final _ConvertPub publicKeyToX25519 = _nativeLib
-      .lookup<NativeFunction<_CConvertPub>>('pk_ed25519_to_x25519')
-      .asFunction<_ConvertPub>();
+  static final _ConvertPub publicKeyToX25519 =
+      _nativeLib
+          .lookup<NativeFunction<_CConvertPub>>('pk_ed25519_to_x25519')
+          .asFunction<_ConvertPub>();
 
-  static final _ConvertSec secretKeyToX25519 = _nativeLib
-      .lookup<NativeFunction<_CConvertSec>>('sk_ed25519_to_x25519')
-      .asFunction<_ConvertSec>();
+  static final _ConvertSec secretKeyToX25519 =
+      _nativeLib
+          .lookup<NativeFunction<_CConvertSec>>('sk_ed25519_to_x25519')
+          .asFunction<_ConvertSec>();
 }
 
 // ─── SecretKey ────────────────────────────────────────────────────────────────
@@ -120,8 +150,12 @@ class SecretKey implements Finalizable {
   bool _disposed = false;
 
   SecretKey._internal(this._ptr) {
-    _finalizer.attach(this, _ptr.cast(),
-        externalSize: _Ffi.keyLength, detach: this);
+    _finalizer.attach(
+      this,
+      _ptr.cast(),
+      externalSize: _Ffi.keyLength,
+      detach: this,
+    );
   }
 
   /// Generates a cryptographically secure random [SecretKey].
@@ -146,7 +180,10 @@ class SecretKey implements Finalizable {
   factory SecretKey.fromBytes(Uint8List bytes) {
     if (bytes.length != _Ffi.keyLength) {
       throw ArgumentError.value(
-          bytes, 'bytes', 'must be exactly ${_Ffi.keyLength} bytes');
+        bytes,
+        'bytes',
+        'must be exactly ${_Ffi.keyLength} bytes',
+      );
     }
     final ptr = malloc<Uint8>(_Ffi.keyLength);
     ptr.asTypedList(_Ffi.keyLength).setAll(0, bytes);
@@ -203,10 +240,16 @@ class Ed25519 {
   ///
   /// Throws [ArgumentError] if [publicKey].length != 32.
   static Uint8List signMessage(
-      SecretKey secret, Uint8List publicKey, Uint8List message) {
+    SecretKey secret,
+    Uint8List publicKey,
+    Uint8List message,
+  ) {
     if (publicKey.length != _Ffi.keyLength) {
       throw ArgumentError.value(
-          publicKey, 'publicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+        publicKey,
+        'publicKey',
+        'must be exactly ${_Ffi.keyLength} bytes',
+      );
     }
     return using((Arena arena) {
       final pubPtr = arena<Uint8>(_Ffi.keyLength);
@@ -225,14 +268,23 @@ class Ed25519 {
   /// Throws [ArgumentError] if [signature].length != 64 or
   /// [publicKey].length != 32.
   static bool verifySignature(
-      Uint8List signature, Uint8List publicKey, Uint8List message) {
+    Uint8List signature,
+    Uint8List publicKey,
+    Uint8List message,
+  ) {
     if (signature.length != _Ffi.signatureLength) {
       throw ArgumentError.value(
-          signature, 'signature', 'must be exactly ${_Ffi.signatureLength} bytes');
+        signature,
+        'signature',
+        'must be exactly ${_Ffi.signatureLength} bytes',
+      );
     }
     if (publicKey.length != _Ffi.keyLength) {
       throw ArgumentError.value(
-          publicKey, 'publicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+        publicKey,
+        'publicKey',
+        'must be exactly ${_Ffi.keyLength} bytes',
+      );
     }
     return using((Arena arena) {
       final sigPtr = arena<Uint8>(_Ffi.signatureLength);
@@ -260,11 +312,14 @@ class Ed25519 {
   static Uint8List scalarMultiply(SecretKey scalar, Uint8List point) {
     if (point.length != _Ffi.keyLength) {
       throw ArgumentError.value(
-          point, 'point', 'must be exactly ${_Ffi.keyLength} bytes');
+        point,
+        'point',
+        'must be exactly ${_Ffi.keyLength} bytes',
+      );
     }
     return using((Arena arena) {
       final pointPtr = arena<Uint8>(_Ffi.keyLength);
-      final outPtr   = arena<Uint8>(_Ffi.keyLength);
+      final outPtr = arena<Uint8>(_Ffi.keyLength);
       _write(pointPtr, point);
       _Ffi.scalarMultiply(outPtr, scalar._nativePtr, pointPtr);
       return _read(outPtr, _Ffi.keyLength);
@@ -279,7 +334,10 @@ class Ed25519 {
   static SecretKey diffieHellman(SecretKey secret, Uint8List peerPublicKey) {
     if (peerPublicKey.length != _Ffi.keyLength) {
       throw ArgumentError.value(
-          peerPublicKey, 'peerPublicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+        peerPublicKey,
+        'peerPublicKey',
+        'must be exactly ${_Ffi.keyLength} bytes',
+      );
     }
     final outPtr = malloc<Uint8>(_Ffi.keyLength);
     try {
@@ -301,7 +359,10 @@ class Ed25519 {
   static Uint8List publicKeyToX25519(Uint8List edPublicKey) {
     if (edPublicKey.length != _Ffi.keyLength) {
       throw ArgumentError.value(
-          edPublicKey, 'edPublicKey', 'must be exactly ${_Ffi.keyLength} bytes');
+        edPublicKey,
+        'edPublicKey',
+        'must be exactly ${_Ffi.keyLength} bytes',
+      );
     }
     return using((Arena arena) {
       final inpPtr = arena<Uint8>(_Ffi.keyLength);
@@ -339,7 +400,11 @@ class EddsaUtils {
   /// Decodes a lowercase hex string to bytes.
   static Uint8List bytesFromHex(String hex) {
     if (hex.length.isOdd) {
-      throw ArgumentError.value(hex, 'hex', 'must have an even number of characters');
+      throw ArgumentError.value(
+        hex,
+        'hex',
+        'must have an even number of characters',
+      );
     }
     return Uint8List.fromList([
       for (int i = 0; i < hex.length; i += 2)
@@ -360,7 +425,8 @@ class EddsaUtils {
   static Uint8List generateRandom32() {
     final rng = Random.secure();
     return Uint8List.fromList(
-        List.generate(_Ffi.keyLength, (_) => rng.nextInt(256)));
+      List.generate(_Ffi.keyLength, (_) => rng.nextInt(256)),
+    );
   }
 
   /// Best-effort wipe of [bytes] on the Dart heap.
