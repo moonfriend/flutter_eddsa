@@ -35,9 +35,13 @@ class _HexField extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 13)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
               const Spacer(),
               IconButton(
                 icon: const Icon(Icons.copy, size: 18),
@@ -47,11 +51,13 @@ class _HexField extends StatelessWidget {
                   Clipboard.setData(ClipboardData(text: hex));
                   ScaffoldMessenger.of(context)
                     ..hideCurrentSnackBar()
-                    ..showSnackBar(SnackBar(
-                      content: Text('$label copied'),
-                      duration: const Duration(seconds: 1),
-                      behavior: SnackBarBehavior.floating,
-                    ));
+                    ..showSnackBar(
+                      SnackBar(
+                        content: Text('$label copied'),
+                        duration: const Duration(seconds: 1),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
                 },
               ),
             ],
@@ -59,7 +65,10 @@ class _HexField extends StatelessWidget {
           SelectableText(
             hex,
             style: const TextStyle(
-                fontFamily: 'monospace', fontSize: 11.5, height: 1.5),
+              fontFamily: 'monospace',
+              fontSize: 11.5,
+              height: 1.5,
+            ),
           ),
         ],
       ),
@@ -84,11 +93,12 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium!
-                    .copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium!.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 12),
             child,
           ],
@@ -187,10 +197,10 @@ class _DemoPageState extends State<DemoPage> {
     final bSec = SecretKey.generate();
     final bPub = Ed25519.generateX25519PublicKey(bSec);
     setState(() {
-      _laylaSec    = aSec;
-      _laylaPub    = aPub;
-      _yusufSec    = bSec;
-      _yusufPub    = bPub;
+      _laylaSec = aSec;
+      _laylaPub = aPub;
+      _yusufSec = bSec;
+      _yusufPub = bPub;
       _laylaShared = Ed25519.diffieHellman(aSec, bPub);
       _yusufShared = Ed25519.diffieHellman(bSec, aPub);
     });
@@ -205,10 +215,11 @@ class _DemoPageState extends State<DemoPage> {
           IconButton(
             icon: const Icon(Icons.info_outline),
             tooltip: 'How DH works (color metaphor)',
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ColorPage()),
-            ),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ColorPage()),
+                ),
           ),
         ],
       ),
@@ -250,11 +261,10 @@ class _DemoPageState extends State<DemoPage> {
           if (sk != null && pk != null) ...[
             const SizedBox(height: 16),
             _HexField(
-                label: 'Secret key (never share this — shown here for demo only)',
-                hex: EddsaUtils.hexFromBytes(sk.toBytes())),
-            _HexField(
-                label: 'Public key',
-                hex: EddsaUtils.hexFromBytes(pk)),
+              label: 'Secret key (never share this — shown here for demo only)',
+              hex: EddsaUtils.hexFromBytes(sk.toBytes()),
+            ),
+            _HexField(label: 'Public key', hex: EddsaUtils.hexFromBytes(pk)),
           ],
         ],
       ),
@@ -284,10 +294,11 @@ class _DemoPageState extends State<DemoPage> {
               labelText: 'Message',
               border: OutlineInputBorder(),
             ),
-            onChanged: (_) => setState(() {
-              _signature = null;
-              _verifyResult = null;
-            }),
+            onChanged:
+                (_) => setState(() {
+                  _signature = null;
+                  _verifyResult = null;
+                }),
           ),
           const SizedBox(height: 12),
           FilledButton.icon(
@@ -298,14 +309,17 @@ class _DemoPageState extends State<DemoPage> {
           if (!canSign)
             const Padding(
               padding: EdgeInsets.only(top: 8),
-              child: Text('Complete step 1 first.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+              child: Text(
+                'Complete step 1 first.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
             ),
           if (sig != null) ...[
             const SizedBox(height: 16),
             _HexField(
-                label: 'Signature (64 bytes)',
-                hex: EddsaUtils.hexFromBytes(sig)),
+              label: 'Signature (64 bytes)',
+              hex: EddsaUtils.hexFromBytes(sig),
+            ),
           ],
         ],
       ),
@@ -316,7 +330,7 @@ class _DemoPageState extends State<DemoPage> {
 
   Widget _buildVerifyCard() {
     final sig = _signature;
-    final pk  = _publicKey;
+    final pk = _publicKey;
     final canVerify = sig != null && pk != null;
     final result = _verifyResult;
     final verifiedMsg = _verifiedMessage;
@@ -335,7 +349,8 @@ class _DemoPageState extends State<DemoPage> {
           ),
           const SizedBox(height: 12),
           Wrap(
-            spacing: 8, runSpacing: 8,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               FilledButton.icon(
                 onPressed: canVerify ? () => _verify(tamper: false) : null,
@@ -352,18 +367,23 @@ class _DemoPageState extends State<DemoPage> {
           if (!canVerify)
             const Padding(
               padding: EdgeInsets.only(top: 8),
-              child: Text('Sign a message first.',
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
+              child: Text(
+                'Sign a message first.',
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
             ),
-          if (result != null && sig != null && pk != null && verifiedMsg != null) ...[
+          if (result != null &&
+              sig != null &&
+              pk != null &&
+              verifiedMsg != null) ...[
             const SizedBox(height: 16),
             _VerifyCallBox(
-              sigHex:    EddsaUtils.hexFromBytes(sig),
-              pkHex:     EddsaUtils.hexFromBytes(pk),
-              message:   verifiedMsg,
-              tampered:  _verifiedTampered,
-              original:  _msgCtrl.text,
-              result:    result,
+              sigHex: EddsaUtils.hexFromBytes(sig),
+              pkHex: EddsaUtils.hexFromBytes(pk),
+              message: verifiedMsg,
+              tampered: _verifiedTampered,
+              original: _msgCtrl.text,
+              result: result,
             ),
           ],
         ],
@@ -374,15 +394,19 @@ class _DemoPageState extends State<DemoPage> {
   // ── Section 4: DH key exchange ───────────────────────────────────────────
 
   Widget _buildDHCard() {
-    final aSec    = _laylaSec;
-    final aPub    = _laylaPub;
-    final bSec    = _yusufSec;
-    final bPub    = _yusufPub;
+    final aSec = _laylaSec;
+    final aPub = _laylaPub;
+    final bSec = _yusufSec;
+    final bPub = _yusufPub;
     final aShared = _laylaShared;
     final bShared = _yusufShared;
-    final hasResult = aSec != null && aPub != null &&
-                      bSec != null && bPub != null &&
-                      aShared != null && bShared != null;
+    final hasResult =
+        aSec != null &&
+        aPub != null &&
+        bSec != null &&
+        bPub != null &&
+        aShared != null &&
+        bShared != null;
 
     return _SectionCard(
       title: '4 · X25519 Diffie-Hellman key exchange',
@@ -399,13 +423,16 @@ class _DemoPageState extends State<DemoPage> {
           ),
           const SizedBox(height: 8),
           TextButton.icon(
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ColorPage()),
-            ),
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ColorPage()),
+                ),
             icon: const Icon(Icons.palette_outlined, size: 16),
-            label: const Text('See the color metaphor explanation →',
-                style: TextStyle(fontSize: 12)),
+            label: const Text(
+              'See the color metaphor explanation →',
+              style: TextStyle(fontSize: 12),
+            ),
           ),
           const SizedBox(height: 4),
           FilledButton.icon(
@@ -418,10 +445,10 @@ class _DemoPageState extends State<DemoPage> {
             _DHProcess(
               laylaSec: EddsaUtils.hexFromBytes(aSec.toBytes()),
               laylaPub: EddsaUtils.hexFromBytes(aPub),
-              yusufSec:   EddsaUtils.hexFromBytes(bSec.toBytes()),
-              yusufPub:   EddsaUtils.hexFromBytes(bPub),
+              yusufSec: EddsaUtils.hexFromBytes(bSec.toBytes()),
+              yusufPub: EddsaUtils.hexFromBytes(bPub),
               laylaShared: EddsaUtils.hexFromBytes(aShared.toBytes()),
-              yusufShared:   EddsaUtils.hexFromBytes(bShared.toBytes()),
+              yusufShared: EddsaUtils.hexFromBytes(bShared.toBytes()),
             ),
           ],
         ],
@@ -448,7 +475,11 @@ class _VerifyCallBox extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    const mono = TextStyle(fontFamily: 'monospace', fontSize: 11.5, height: 1.6);
+    const mono = TextStyle(
+      fontFamily: 'monospace',
+      fontSize: 11.5,
+      height: 1.6,
+    );
 
     return Container(
       width: double.infinity,
@@ -501,8 +532,9 @@ class _VerifyCallBox extends StatelessWidget {
               child: Text(
                 '// original was: "$original"',
                 style: mono.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontStyle: FontStyle.italic),
+                  color: cs.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
           const Text(')', style: mono),
@@ -529,11 +561,12 @@ class _VerifyCallBox extends StatelessWidget {
                   result
                       ? 'Signature is valid for this key and message.'
                       : tampered
-                          ? 'Message was modified — signature no longer matches.'
-                          : 'Signature does not match.',
+                      ? 'Message was modified — signature no longer matches.'
+                      : 'Signature does not match.',
                   style: TextStyle(
-                      fontSize: 12,
-                      color: result ? Colors.green : Colors.red),
+                    fontSize: 12,
+                    color: result ? Colors.green : Colors.red,
+                  ),
                 ),
               ),
             ],
@@ -573,11 +606,13 @@ class _CallRow extends StatelessWidget {
               Clipboard.setData(ClipboardData(text: value));
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
-                ..showSnackBar(SnackBar(
-                  content: Text('$copyLabel copied'),
-                  duration: const Duration(seconds: 1),
-                  behavior: SnackBarBehavior.floating,
-                ));
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text('$copyLabel copied'),
+                    duration: const Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
             },
           ),
         ],
@@ -609,38 +644,48 @@ class _DHProcess extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Step 1: Generate ──────────────────────────────────────────────
-        _DHStepHeader(cs: cs, label: 'Step 1 · Each generates a key pair independently'),
+        _DHStepHeader(
+          cs: cs,
+          label: 'Step 1 · Each generates a key pair independently',
+        ),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _PartyBlock(
-              name: 'Layla',
-              icon: Icons.person,
-              cs: cs,
-              children: [
-                _DHHexRow('secret key 🔒', laylaSec, 'Layla secret', cs),
-                _DHArrow('generateX25519PublicKey(secret)'),
-                _DHHexRow('public key 📤', laylaPub, 'Layla public', cs),
-              ],
-            )),
+            Expanded(
+              child: _PartyBlock(
+                name: 'Layla',
+                icon: Icons.person,
+                cs: cs,
+                children: [
+                  _DHHexRow('secret key 🔒', laylaSec, 'Layla secret', cs),
+                  _DHArrow('generateX25519PublicKey(secret)'),
+                  _DHHexRow('public key 📤', laylaPub, 'Layla public', cs),
+                ],
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _PartyBlock(
-              name: 'Yusuf',
-              icon: Icons.person_2,
-              cs: cs,
-              children: [
-                _DHHexRow('secret key 🔒', yusufSec, 'Yusuf secret', cs),
-                _DHArrow('generateX25519PublicKey(secret)'),
-                _DHHexRow('public key 📤', yusufPub, 'Yusuf public', cs),
-              ],
-            )),
+            Expanded(
+              child: _PartyBlock(
+                name: 'Yusuf',
+                icon: Icons.person_2,
+                cs: cs,
+                children: [
+                  _DHHexRow('secret key 🔒', yusufSec, 'Yusuf secret', cs),
+                  _DHArrow('generateX25519PublicKey(secret)'),
+                  _DHHexRow('public key 📤', yusufPub, 'Yusuf public', cs),
+                ],
+              ),
+            ),
           ],
         ),
 
         // ── Step 2: Exchange ──────────────────────────────────────────────
         const SizedBox(height: 16),
-        _DHStepHeader(cs: cs, label: 'Step 2 · Exchange public keys over the network'),
+        _DHStepHeader(
+          cs: cs,
+          label: 'Step 2 · Exchange public keys over the network',
+        ),
         const SizedBox(height: 8),
         Container(
           width: double.infinity,
@@ -652,21 +697,28 @@ class _DHProcess extends StatelessWidget {
           child: Column(
             children: [
               _NetworkArrow(
-                  label: 'Layla sends layla_public → Yusuf',
-                  left: 'Layla', right: 'Yusuf', cs: cs),
+                label: 'Layla sends layla_public → Yusuf',
+                left: 'Layla',
+                right: 'Yusuf',
+                cs: cs,
+              ),
               const SizedBox(height: 6),
               _NetworkArrow(
-                  label: 'Yusuf sends yusuf_public → Layla',
-                  left: 'Yusuf', right: 'Layla', cs: cs),
+                label: 'Yusuf sends yusuf_public → Layla',
+                left: 'Yusuf',
+                right: 'Layla',
+                cs: cs,
+              ),
               const SizedBox(height: 8),
               Text(
                 'An eavesdropper sees both public keys — but cannot derive '
                 'either secret or the shared secret from them.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                    fontSize: 11,
-                    fontStyle: FontStyle.italic,
-                    color: cs.onSurfaceVariant),
+                  fontSize: 11,
+                  fontStyle: FontStyle.italic,
+                  color: cs.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -674,34 +726,47 @@ class _DHProcess extends StatelessWidget {
 
         // ── Step 3: Compute shared secret ─────────────────────────────────
         const SizedBox(height: 16),
-        _DHStepHeader(cs: cs, label: 'Step 3 · Each independently computes the shared secret'),
+        _DHStepHeader(
+          cs: cs,
+          label: 'Step 3 · Each independently computes the shared secret',
+        ),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: _PartyBlock(
-              name: 'Layla', icon: Icons.person, cs: cs,
-              children: [
-                _DHCallBox(
-                  cs: cs,
-                  call: 'diffieHellman(\n  layla_secret,\n  yusuf_public   ← received\n)',
-                  resultHex: laylaShared,
-                  copyLabel: 'Layla shared secret',
-                ),
-              ],
-            )),
+            Expanded(
+              child: _PartyBlock(
+                name: 'Layla',
+                icon: Icons.person,
+                cs: cs,
+                children: [
+                  _DHCallBox(
+                    cs: cs,
+                    call:
+                        'diffieHellman(\n  layla_secret,\n  yusuf_public   ← received\n)',
+                    resultHex: laylaShared,
+                    copyLabel: 'Layla shared secret',
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(width: 12),
-            Expanded(child: _PartyBlock(
-              name: 'Yusuf', icon: Icons.person_2, cs: cs,
-              children: [
-                _DHCallBox(
-                  cs: cs,
-                  call: 'diffieHellman(\n  yusuf_secret,\n  layla_public ← received\n)',
-                  resultHex: yusufShared,
-                  copyLabel: 'Yusuf shared secret',
-                ),
-              ],
-            )),
+            Expanded(
+              child: _PartyBlock(
+                name: 'Yusuf',
+                icon: Icons.person_2,
+                cs: cs,
+                children: [
+                  _DHCallBox(
+                    cs: cs,
+                    call:
+                        'diffieHellman(\n  yusuf_secret,\n  layla_public ← received\n)',
+                    resultHex: yusufShared,
+                    copyLabel: 'Yusuf shared secret',
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
 
@@ -711,32 +776,39 @@ class _DHProcess extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: match
-                ? Colors.green.withValues(alpha: 0.08)
-                : Colors.red.withValues(alpha: 0.08),
+            color:
+                match
+                    ? Colors.green.withValues(alpha: 0.08)
+                    : Colors.red.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-                color: match ? Colors.green : Colors.red, width: 1.5),
+              color: match ? Colors.green : Colors.red,
+              width: 1.5,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(match ? Icons.check_circle : Icons.cancel,
-                      color: match ? Colors.green : Colors.red, size: 22),
+                  Icon(
+                    match ? Icons.check_circle : Icons.cancel,
+                    color: match ? Colors.green : Colors.red,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       match
                           ? 'diffieHellman(layla_secret, yusuf_public)\n'
-                            '  == diffieHellman(yusuf_secret, layla_public)'
+                              '  == diffieHellman(yusuf_secret, layla_public)'
                           : 'Results do not match',
                       style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          height: 1.5),
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ],
@@ -748,9 +820,7 @@ class _DHProcess extends StatelessWidget {
                 Text(
                   'Both sides arrived at the same 32-byte value — '
                   'without ever transmitting a secret.',
-                  style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.green.shade700),
+                  style: TextStyle(fontSize: 12, color: Colors.green.shade700),
                 ),
               ],
             ],
@@ -768,11 +838,14 @@ class _DHStepHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(label,
-        style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 12,
-            color: cs.primary));
+    return Text(
+      label,
+      style: TextStyle(
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+        color: cs.primary,
+      ),
+    );
   }
 }
 
@@ -800,15 +873,20 @@ class _PartyBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(children: [
-            Icon(icon, size: 16, color: cs.primary),
-            const SizedBox(width: 6),
-            Text(name,
+          Row(
+            children: [
+              Icon(icon, size: 16, color: cs.primary),
+              const SizedBox(width: 6),
+              Text(
+                name,
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                    color: cs.primary)),
-          ]),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                  color: cs.primary,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 8),
           ...children,
         ],
@@ -830,9 +908,14 @@ class _DHHexRow extends StatelessWidget {
         Row(
           children: [
             Expanded(
-                child: Text(label,
-                    style: const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.w600))),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
             IconButton(
               icon: const Icon(Icons.copy, size: 14),
               tooltip: 'Copy $copyLabel',
@@ -842,18 +925,25 @@ class _DHHexRow extends StatelessWidget {
                 Clipboard.setData(ClipboardData(text: hex));
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
-                  ..showSnackBar(SnackBar(
-                    content: Text('$copyLabel copied'),
-                    duration: const Duration(seconds: 1),
-                    behavior: SnackBarBehavior.floating,
-                  ));
+                  ..showSnackBar(
+                    SnackBar(
+                      content: Text('$copyLabel copied'),
+                      duration: const Duration(seconds: 1),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
               },
             ),
           ],
         ),
-        SelectableText(hex,
-            style: const TextStyle(
-                fontFamily: 'monospace', fontSize: 10, height: 1.4)),
+        SelectableText(
+          hex,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 10,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 4),
       ],
     );
@@ -873,11 +963,14 @@ class _DHArrow extends StatelessWidget {
           const Icon(Icons.arrow_downward, size: 14, color: Colors.grey),
           const SizedBox(width: 4),
           Expanded(
-            child: Text(label,
-                style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 10,
-                    color: Colors.grey)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontSize: 10,
+                color: Colors.grey,
+              ),
+            ),
           ),
         ],
       ),
@@ -901,9 +994,14 @@ class _DHCallBox extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SelectableText(call,
-            style: const TextStyle(
-                fontFamily: 'monospace', fontSize: 10.5, height: 1.5)),
+        SelectableText(
+          call,
+          style: const TextStyle(
+            fontFamily: 'monospace',
+            fontSize: 10.5,
+            height: 1.5,
+          ),
+        ),
         _DHArrow('→ result'),
         _DHHexRow('= shared secret', resultHex, copyLabel, cs),
       ],
@@ -926,27 +1024,32 @@ class _NetworkArrow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(left,
-            style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: cs.primary)),
+        Text(
+          left,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: cs.primary,
+          ),
+        ),
         const SizedBox(width: 6),
-        const Expanded(
-            child: Divider(endIndent: 0, indent: 0, thickness: 1)),
+        const Expanded(child: Divider(endIndent: 0, indent: 0, thickness: 1)),
         const Icon(Icons.arrow_forward, size: 14),
         const SizedBox(width: 6),
-        Text(right,
-            style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: cs.primary)),
+        Text(
+          right,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.bold,
+            color: cs.primary,
+          ),
+        ),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(label,
-              style: TextStyle(
-                  fontSize: 10,
-                  color: cs.onSurfaceVariant)),
+          child: Text(
+            label,
+            style: TextStyle(fontSize: 10, color: cs.onSurfaceVariant),
+          ),
         ),
       ],
     );
@@ -963,10 +1066,13 @@ class _ColorExchange {
   final String laylaPublicHex, yusufPublicHex, sharedHex;
 
   const _ColorExchange({
-    required this.laylaSecret, required this.laylaPublic,
-    required this.yusufSecret,   required this.yusufPublic,
+    required this.laylaSecret,
+    required this.laylaPublic,
+    required this.yusufSecret,
+    required this.yusufPublic,
     required this.shared,
-    required this.laylaPublicHex, required this.yusufPublicHex,
+    required this.laylaPublicHex,
+    required this.yusufPublicHex,
     required this.sharedHex,
   });
 }
@@ -982,21 +1088,21 @@ class _ColorPageState extends State<ColorPage> {
   _ColorExchange? _ex;
 
   void _run() {
-    final aSec   = SecretKey.generate();
-    final aPub   = Ed25519.generateX25519PublicKey(aSec);
-    final bSec   = SecretKey.generate();
-    final bPub   = Ed25519.generateX25519PublicKey(bSec);
+    final aSec = SecretKey.generate();
+    final aPub = Ed25519.generateX25519PublicKey(aSec);
+    final bSec = SecretKey.generate();
+    final bPub = Ed25519.generateX25519PublicKey(bSec);
     final shared = Ed25519.diffieHellman(aSec, bPub);
     setState(() {
       _ex = _ColorExchange(
-        laylaSecret:    _keyColor(aSec.toBytes()),
-        laylaPublic:    _keyColor(aPub),
-        yusufSecret:    _keyColor(bSec.toBytes()),
-        yusufPublic:    _keyColor(bPub),
-        shared:         _keyColor(shared.toBytes()),
+        laylaSecret: _keyColor(aSec.toBytes()),
+        laylaPublic: _keyColor(aPub),
+        yusufSecret: _keyColor(bSec.toBytes()),
+        yusufPublic: _keyColor(bPub),
+        shared: _keyColor(shared.toBytes()),
         laylaPublicHex: EddsaUtils.hexFromBytes(aPub).substring(0, 16),
         yusufPublicHex: EddsaUtils.hexFromBytes(bPub).substring(0, 16),
-        sharedHex:      EddsaUtils.hexFromBytes(shared.toBytes()).substring(0, 16),
+        sharedHex: EddsaUtils.hexFromBytes(shared.toBytes()).substring(0, 16),
       );
     });
     aSec.dispose();
@@ -1043,9 +1149,19 @@ class _ColorPageState extends State<ColorPage> {
       child: const Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          Column(children: [Icon(Icons.person, size: 40, color: Colors.grey), Text('Layla')]),
+          Column(
+            children: [
+              Icon(Icons.person, size: 40, color: Colors.grey),
+              Text('Layla'),
+            ],
+          ),
           Icon(Icons.swap_horiz, size: 32, color: Colors.grey),
-          Column(children: [Icon(Icons.person_2, size: 40, color: Colors.grey), Text('Yusuf')]),
+          Column(
+            children: [
+              Icon(Icons.person_2, size: 40, color: Colors.grey),
+              Text('Yusuf'),
+            ],
+          ),
         ],
       ),
     );
@@ -1058,8 +1174,8 @@ class _ColorPageState extends State<ColorPage> {
           step: '1',
           label: 'Each picks a secret color',
           sublabel: 'Never shared with anyone',
-          left:  _Swatch(color: ex.laylaSecret, label: "Layla's\nsecret"),
-          right: _Swatch(color: ex.yusufSecret,   label: "Yusuf's\nsecret"),
+          left: _Swatch(color: ex.laylaSecret, label: "Layla's\nsecret"),
+          right: _Swatch(color: ex.yusufSecret, label: "Yusuf's\nsecret"),
           middle: const _EyeSlash(),
         ),
         const _StepArrow(),
@@ -1067,8 +1183,14 @@ class _ColorPageState extends State<ColorPage> {
           step: '2',
           label: 'Mix with base → send publicly',
           sublabel: 'Eve can see these',
-          left:  _Swatch(color: ex.laylaPublic, label: "Layla's public\n${ex.laylaPublicHex}…"),
-          right: _Swatch(color: ex.yusufPublic,   label: "Yusuf's public\n${ex.yusufPublicHex}…"),
+          left: _Swatch(
+            color: ex.laylaPublic,
+            label: "Layla's public\n${ex.laylaPublicHex}…",
+          ),
+          right: _Swatch(
+            color: ex.yusufPublic,
+            label: "Yusuf's public\n${ex.yusufPublicHex}…",
+          ),
           middle: _EveBox(ac: ex.laylaPublic, bc: ex.yusufPublic),
         ),
         const _StepArrow(),
@@ -1076,7 +1198,7 @@ class _ColorPageState extends State<ColorPage> {
           step: '3',
           label: "Mix peer's public with own secret",
           sublabel: 'Both arrive at the same color!',
-          left:  _Swatch(color: ex.shared, label: "Layla's\nshared secret"),
+          left: _Swatch(color: ex.shared, label: "Layla's\nshared secret"),
           right: _Swatch(color: ex.shared, label: "Yusuf's\nshared secret"),
           middle: _MatchBadge(hex: ex.sharedHex),
         ),
@@ -1089,8 +1211,12 @@ class _ColorStep extends StatelessWidget {
   final String step, label, sublabel;
   final Widget left, right, middle;
   const _ColorStep({
-    required this.step, required this.label, required this.sublabel,
-    required this.left, required this.right, required this.middle,
+    required this.step,
+    required this.label,
+    required this.sublabel,
+    required this.left,
+    required this.right,
+    required this.middle,
   });
 
   @override
@@ -1105,21 +1231,44 @@ class _ColorStep extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Row(children: [
-            CircleAvatar(
-              radius: 12, backgroundColor: cs.primary,
-              child: Text(step, style: TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.bold, color: cs.onPrimary)),
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text(sublabel, style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant)),
-              ],
-            )),
-          ]),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 12,
+                backgroundColor: cs.primary,
+                child: Text(
+                  step,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: cs.onPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    Text(
+                      sublabel,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1142,18 +1291,26 @@ class _Swatch extends StatelessWidget {
     return Column(
       children: [
         Container(
-          width: 56, height: 56,
+          width: 56,
+          height: 56,
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [BoxShadow(
+            boxShadow: [
+              BoxShadow(
                 color: color.withValues(alpha: 0.5),
-                blurRadius: 8, offset: const Offset(0, 3))],
+                blurRadius: 8,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 6),
-        Text(label, textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 10)),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 10),
+        ),
       ],
     );
   }
@@ -1162,48 +1319,85 @@ class _Swatch extends StatelessWidget {
 class _EyeSlash extends StatelessWidget {
   const _EyeSlash();
   @override
-  Widget build(BuildContext context) => Column(children: [
-    Icon(Icons.visibility_off,
-        color: Theme.of(context).colorScheme.onSurfaceVariant),
-    const SizedBox(height: 4),
-    const Text("Eve\ncan't see",
-        textAlign: TextAlign.center, style: TextStyle(fontSize: 10)),
-  ]);
+  Widget build(BuildContext context) => Column(
+    children: [
+      Icon(
+        Icons.visibility_off,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      const SizedBox(height: 4),
+      const Text(
+        "Eve\ncan't see",
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 10),
+      ),
+    ],
+  );
 }
 
 class _EveBox extends StatelessWidget {
   final Color ac, bc;
   const _EveBox({required this.ac, required this.bc});
   @override
-  Widget build(BuildContext context) => Column(children: [
-    const Icon(Icons.remove_red_eye, color: Colors.orange, size: 18),
-    const Text('Eve sees:', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-    const SizedBox(height: 4),
-    Row(mainAxisSize: MainAxisSize.min, children: [
-      Container(width: 20, height: 20,
-          decoration: BoxDecoration(color: ac, borderRadius: BorderRadius.circular(4))),
-      const SizedBox(width: 4),
-      Container(width: 20, height: 20,
-          decoration: BoxDecoration(color: bc, borderRadius: BorderRadius.circular(4))),
-    ]),
-    const SizedBox(height: 4),
-    const Text("but can't\ncrack it",
+  Widget build(BuildContext context) => Column(
+    children: [
+      const Icon(Icons.remove_red_eye, color: Colors.orange, size: 18),
+      const Text(
+        'Eve sees:',
+        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+      ),
+      const SizedBox(height: 4),
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: ac,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Container(
+            width: 20,
+            height: 20,
+            decoration: BoxDecoration(
+              color: bc,
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      const Text(
+        "but can't\ncrack it",
         textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 9, color: Colors.orange)),
-  ]);
+        style: TextStyle(fontSize: 9, color: Colors.orange),
+      ),
+    ],
+  );
 }
 
 class _MatchBadge extends StatelessWidget {
   final String hex;
   const _MatchBadge({required this.hex});
   @override
-  Widget build(BuildContext context) => Column(children: [
-    const Icon(Icons.check_circle, color: Colors.green, size: 22),
-    const Text('Match!', style: TextStyle(
-        fontSize: 11, fontWeight: FontWeight.bold, color: Colors.green)),
-    const SizedBox(height: 2),
-    Text('$hex…', style: const TextStyle(fontSize: 8)),
-  ]);
+  Widget build(BuildContext context) => Column(
+    children: [
+      const Icon(Icons.check_circle, color: Colors.green, size: 22),
+      const Text(
+        'Match!',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Colors.green,
+        ),
+      ),
+      const SizedBox(height: 2),
+      Text('$hex…', style: const TextStyle(fontSize: 8)),
+    ],
+  );
 }
 
 class _StepArrow extends StatelessWidget {
@@ -1211,7 +1405,9 @@ class _StepArrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Icon(Icons.arrow_downward,
-        color: Theme.of(context).colorScheme.onSurfaceVariant),
+    child: Icon(
+      Icons.arrow_downward,
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
   );
 }
