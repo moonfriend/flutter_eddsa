@@ -1095,21 +1095,24 @@ class _ColorPageState extends State<ColorPage> {
     final bSec = SecretKey.generate();
     final bPub = Ed25519.generateX25519PublicKey(bSec);
     final shared = Ed25519.diffieHellman(aSec, bPub);
-    setState(() {
-      _ex = _ColorExchange(
-        laylaSecret: _keyColor(aSec.toBytes()),
-        laylaPublic: _keyColor(aPub),
-        yusufSecret: _keyColor(bSec.toBytes()),
-        yusufPublic: _keyColor(bPub),
-        shared: _keyColor(shared.toBytes()),
-        laylaPublicHex: EddsaUtils.hexFromBytes(aPub).substring(0, 16),
-        yusufPublicHex: EddsaUtils.hexFromBytes(bPub).substring(0, 16),
-        sharedHex: EddsaUtils.hexFromBytes(shared.toBytes()).substring(0, 16),
-      );
-    });
-    aSec.dispose();
-    bSec.dispose();
-    shared.dispose();
+    try {
+      setState(() {
+        _ex = _ColorExchange(
+          laylaSecret: _keyColor(aSec.toBytes()),
+          laylaPublic: _keyColor(aPub),
+          yusufSecret: _keyColor(bSec.toBytes()),
+          yusufPublic: _keyColor(bPub),
+          shared: _keyColor(shared.toBytes()),
+          laylaPublicHex: EddsaUtils.hexFromBytes(aPub).substring(0, 16),
+          yusufPublicHex: EddsaUtils.hexFromBytes(bPub).substring(0, 16),
+          sharedHex: EddsaUtils.hexFromBytes(shared.toBytes()).substring(0, 16),
+        );
+      });
+    } finally {
+      aSec.dispose();
+      bSec.dispose();
+      shared.dispose();
+    }
   }
 
   @override
