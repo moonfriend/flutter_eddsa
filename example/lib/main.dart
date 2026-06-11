@@ -151,9 +151,9 @@ class _DemoPageState extends State<DemoPage> {
   }
 
   void _generateKeys() {
-    _secretKey?.dispose();
     final sk = SecretKey.generate();
     final pk = Ed25519.derivePublicKey(sk);
+    _secretKey?.dispose();
     setState(() {
       _secretKey = sk;
       _publicKey = pk;
