@@ -164,11 +164,17 @@ class SecretKey implements Finalizable {
   /// Dart heap.
   factory SecretKey.generate() {
     final ptr = malloc<Uint8>(_Ffi.keyLength);
-    final rng = Random.secure();
-    for (int i = 0; i < _Ffi.keyLength; i++) {
-      ptr[i] = rng.nextInt(256);
+    try {
+      final rng = Random.secure();
+      for (int i = 0; i < _Ffi.keyLength; i++) {
+        ptr[i] = rng.nextInt(256);
+      }
+      return SecretKey._internal(ptr);
+    } catch (_) {
+      ptr.asTypedList(_Ffi.keyLength).fillRange(0, _Ffi.keyLength, 0);
+      malloc.free(ptr);
+      rethrow;
     }
-    return SecretKey._internal(ptr);
   }
 
   /// Creates a [SecretKey] by copying [bytes] into native memory.
