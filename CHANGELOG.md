@@ -1,3 +1,29 @@
+## 0.2.1
+
+**Security fixes and documentation improvements.**
+
+* Fixed dispose-before-replace in `_generateKeys()`: the old `SecretKey` is now
+  disposed only after the replacement is successfully generated, preventing a
+  dangling pointer if key generation throws.
+* Fixed dispose-before-replace in `_runDH()`: all new keys and shared secrets
+  are fully computed before the old ones are disposed. Also moved
+  `diffieHellman` calls out of the `setState` callback.
+* Fixed key leak in `_ColorPageState._run()`: wrapped `dispose` calls in
+  `try-finally` so keys are always zeroed and freed even if `setState` throws.
+* Fixed unzeroed exception paths in `Ed25519.diffieHellman` and
+  `secretKeyToX25519`: both `catch` blocks now zero `outPtr` before freeing,
+  matching the behaviour of `SecretKey.dispose()`.
+* Fixed native buffer leak in `SecretKey.generate()`: if `Random.secure()` or
+  byte-filling throws after `malloc` succeeds, the buffer is now zeroed and
+  freed before rethrowing. Previously it leaked permanently with no finalizer.
+* `EddsaUtils.zero()` is now `@Deprecated`. The deprecation message explains
+  the AOT dead-store limitation and appears in IDEs and `dart analyze` at every
+  call site. The method is still the best available option after
+  `SecretKey.fromBytes()` — use it, but do not treat it as a hard guarantee.
+* Improved documentation on `SecretKey`, `dispose()`, and `fromBytes()` to
+  accurately describe the best-effort nature of native-pointer zeroing and
+  surface the limitation wherever users are directed to call `EddsaUtils.zero()`.
+
 ## 0.2.0
 
 **Breaking changes** — secret inputs are now `SecretKey` instead of `Uint8List`.
