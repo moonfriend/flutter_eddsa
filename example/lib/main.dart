@@ -1095,23 +1095,32 @@ class _ColorPageState extends State<ColorPage> {
     final bSec = SecretKey.generate();
     final bPub = Ed25519.generateX25519PublicKey(bSec);
     final shared = Ed25519.diffieHellman(aSec, bPub);
+    final aSecBytes = aSec.toBytes();
+    final bSecBytes = bSec.toBytes();
+    final sharedBytes = shared.toBytes();
     try {
       setState(() {
         _ex = _ColorExchange(
-          laylaSecret: _keyColor(aSec.toBytes()),
+          laylaSecret: _keyColor(aSecBytes),
           laylaPublic: _keyColor(aPub),
-          yusufSecret: _keyColor(bSec.toBytes()),
+          yusufSecret: _keyColor(bSecBytes),
           yusufPublic: _keyColor(bPub),
-          shared: _keyColor(shared.toBytes()),
+          shared: _keyColor(sharedBytes),
           laylaPublicHex: EddsaUtils.hexFromBytes(aPub).substring(0, 16),
           yusufPublicHex: EddsaUtils.hexFromBytes(bPub).substring(0, 16),
-          sharedHex: EddsaUtils.hexFromBytes(shared.toBytes()).substring(0, 16),
+          sharedHex: EddsaUtils.hexFromBytes(sharedBytes).substring(0, 16),
         );
       });
     } finally {
       aSec.dispose();
       bSec.dispose();
       shared.dispose();
+      // ignore: deprecated_member_use
+      EddsaUtils.zero(aSecBytes);
+      // ignore: deprecated_member_use
+      EddsaUtils.zero(bSecBytes);
+      // ignore: deprecated_member_use
+      EddsaUtils.zero(sharedBytes);
     }
   }
 
