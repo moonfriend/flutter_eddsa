@@ -144,13 +144,17 @@ Flutter Secure Storage), minimise the exposure window:
 ```dart
 final bytes  = EddsaUtils.bytesFromHex(savedHex);
 final secret = SecretKey.fromBytes(bytes);
-EddsaUtils.zero(bytes); // best-effort wipe of the Dart-heap copy
+// ignore: deprecated_member_use
+EddsaUtils.zero(bytes); // best-effort wipe — Dart AOT may eliminate this
 // use secret ...
 secret.dispose();
 ```
 
-> **Note:** The `String` from storage APIs is immutable and cannot be zeroed.
-> For ephemeral session keys, always prefer `SecretKey.generate()`.
+> **Note:** `EddsaUtils.zero()` is deprecated because Dart AOT may eliminate
+> the zeroing as a dead store. It is still the best available option for
+> wiping a `Uint8List` — use it, but do not rely on it as a hard guarantee.
+> The `String` returned by storage APIs is immutable and cannot be zeroed at
+> all. For ephemeral session keys, always prefer `SecretKey.generate()`.
 
 ### Convert an Ed25519 key pair to X25519
 
@@ -258,7 +262,9 @@ Even with `SecretKey`, there are gaps you must manage yourself:
 2. **After `SecretKey.fromBytes(bytes)`, call `EddsaUtils.zero(bytes)`.**
    This is a best-effort wipe of the `Uint8List` that briefly held the
    secret on the Dart heap. AOT may eliminate it, but it is still worth
-   doing to reduce the exposure window.
+   doing to reduce the exposure window. `EddsaUtils.zero()` is marked
+   `@Deprecated` to surface this limitation at every call site — use it
+   anyway, but do not treat it as a hard guarantee.
 
 3. **You cannot zero a `String`.** Storage APIs (Flutter Secure Storage,
    SharedPreferences) return Dart `String` values, which are immutable and
@@ -268,8 +274,8 @@ Even with `SecretKey`, there are gaps you must manage yourself:
    the raw key material is never returned to Dart at all where possible.
 
 4. **`toBytes()` places the secret on the Dart heap.** Only call it when
-   you have no alternative, and zero the result immediately with
-   `EddsaUtils.zero(result)` after use.
+   you have no alternative, and attempt to zero the result with
+   `EddsaUtils.zero(result)` after use — best-effort, AOT may eliminate it.
 
 5. **This plugin provides primitives only.** For a complete secure channel
    you also need a symmetric cipher and message authentication

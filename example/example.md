@@ -59,15 +59,18 @@ import 'package:flutter_eddsa/flutter_eddsa.dart';
 // bytes comes from secure storage / hex decode — lives on Dart heap briefly
 final bytes  = EddsaUtils.bytesFromHex(savedHex);
 final secret = SecretKey.fromBytes(bytes);
-EddsaUtils.zero(bytes); // best-effort wipe of the Dart-heap copy
+// ignore: deprecated_member_use
+EddsaUtils.zero(bytes); // best-effort wipe — Dart AOT may eliminate this
 
 // use secret ...
 secret.dispose();
 ```
 
-> **Note:** The `String` returned by storage APIs is immutable and interned —
-> it cannot be zeroed. This brief exposure is unavoidable when loading
-> long-term keys; for ephemeral session keys prefer `SecretKey.generate()`.
+> **Note:** `EddsaUtils.zero()` is deprecated because Dart AOT may eliminate
+> the zeroing as a dead store. It is still the best available option for
+> wiping a `Uint8List` — use it, but do not rely on it as a hard guarantee.
+> The `String` returned by storage APIs is immutable and cannot be zeroed.
+> For ephemeral session keys prefer `SecretKey.generate()`.
 
 ## Key conversion (Ed25519 → X25519)
 

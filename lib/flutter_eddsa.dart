@@ -134,15 +134,19 @@ class _Ffi {
 ///
 /// Secret bytes live outside the Dart heap, preventing GC copies from leaving
 /// unzeroed shadows in from-space. Call [dispose] when finished — it
-/// overwrites the native buffer with zeros before freeing it.
+/// best-effort zeros the native buffer before freeing. Writes go through a
+/// native pointer (malloc'd memory outside the Dart heap), so zeroing is
+/// unlikely to be eliminated by Dart AOT as a dead store — but this carries
+/// no language-level guarantee.
 ///
 /// A [NativeFinalizer] is attached as a safety net: if [dispose] is never
 /// called the allocator will free the memory on the next GC cycle, but it
 /// will **not** zero it first. Always call [dispose] explicitly.
 ///
 /// **Avoid [toBytes] in production.** The returned [Uint8List] lives on the
-/// Dart heap and is subject to GC copying. If you must extract bytes, zero
-/// the result immediately with [EddsaUtils.zero].
+/// Dart heap and is subject to GC copying. If you must extract bytes, attempt
+/// to wipe the result with EddsaUtils.zero() — but note this is best-effort
+/// only; Dart AOT may eliminate the zeroing as a dead store.
 class SecretKey implements Finalizable {
   static final _finalizer = NativeFinalizer(malloc.nativeFree);
 
@@ -179,8 +183,10 @@ class SecretKey implements Finalizable {
 
   /// Creates a [SecretKey] by copying [bytes] into native memory.
   ///
-  /// [bytes] must be exactly 32 bytes. After calling this, wipe [bytes] with
-  /// [EddsaUtils.zero] to reduce the window the secret spends on the Dart heap.
+  /// [bytes] must be exactly 32 bytes. After calling this, attempt to wipe
+  /// [bytes] with EddsaUtils.zero() to reduce the window the secret spends on
+  /// the Dart heap. Note that EddsaUtils.zero() is best-effort only — Dart AOT
+  /// may eliminate the zeroing.
   ///
   /// Throws [ArgumentError] if [bytes].length != 32.
   factory SecretKey.fromBytes(Uint8List bytes) {
@@ -205,6 +211,13 @@ class SecretKey implements Finalizable {
   }
 
   /// Zeros the native buffer and releases the memory.
+  ///
+  /// The zeroing writes through a native pointer (malloc'd memory outside the
+  /// Dart heap), so it is not subject to GC copying and is unlikely to be
+  /// eliminated as a dead store by Dart AOT — but this is a best-effort
+  /// guarantee, not a language-level one. It is still the safest zeroing
+  /// available in Dart; always prefer [dispose] over EddsaUtils.zero() for
+  /// key material.
   ///
   /// Safe to call more than once — subsequent calls are no-ops.
   void dispose() {
@@ -443,5 +456,12 @@ class EddsaUtils {
   /// For deterministic zeroing keep secrets in a [SecretKey] instead.
   /// Use this to reduce — not eliminate — the exposure window when a secret
   /// has briefly passed through a [Uint8List] (e.g. after [SecretKey.fromBytes]).
+  @Deprecated(
+    'EddsaUtils.zero() is best-effort only — Dart AOT may eliminate the '
+    'fillRange call as a dead store. Keep secrets in SecretKey and call '
+    'dispose() for deterministic zeroing. If you must wipe a Uint8List after '
+    'SecretKey.fromBytes(), this is still the best available option but '
+    'carries no hard guarantee.',
+  )
   static void zero(Uint8List bytes) => bytes.fillRange(0, bytes.length, 0);
 }
