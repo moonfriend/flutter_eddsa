@@ -36,7 +36,7 @@ Both primitives are built on the same underlying curve, which means an Ed25519 k
 
 ```yaml
 dependencies:
-  flutter_eddsa: ^0.2.1
+  flutter_eddsa: ^0.2.2
 ```
 
 ```sh
