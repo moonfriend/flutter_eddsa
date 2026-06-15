@@ -1,3 +1,7 @@
+## 0.2.3
+
+* Re-published under the faridmotreb.com publisher account.
+
 ## 0.2.1
 
 **Security fixes and documentation improvements.**
